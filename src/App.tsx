@@ -235,48 +235,53 @@ function App() {
       </div>
       {/* Shelf list */}
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {filteredShelf.map(item => (
-          <li key={item.id} style={{ border: '1px solid #444', borderRadius: 8, marginBottom: 12, padding: 12, background: '#222' }}>
-            {editId === item.id ? (
-              <div>
-                <input
-                  type="text"
-                  value={editCustomName}
-                  onChange={e => setEditCustomName(e.target.value)}
-                  placeholder="Custom Name"
-                />
-                <input
-                  type="number"
-                  value={editVolume}
-                  onChange={e => setEditVolume(Number(e.target.value))}
-                  min={0}
-                  style={{ width: 80, marginLeft: 8 }}
-                />
-                <input
-                  type="text"
-                  value={editNotes}
-                  onChange={e => setEditNotes(e.target.value)}
-                  placeholder="Notes"
-                  style={{ marginLeft: 8 }}
-                />
-                <button onClick={() => handleEditSave(item.id)} style={{ marginLeft: 8 }}>Save</button>
-                <button onClick={handleEditCancel} style={{ marginLeft: 4 }}>Cancel</button>
+          {filteredShelf.map(item => (
+            <li key={item.id} style={{ display: 'flex', alignItems: 'center', border: '1px solid #444', borderRadius: 8, marginBottom: 12, padding: 12, background: '#222' }}>
+              {item.meta?.image_url && (
+                <img src={item.meta.image_url} alt={item.meta.name} style={{ width: 64, height: 128, objectFit: 'contain', marginRight: 16, background: '#fff', borderRadius: 4 }} />
+              )}
+              <div style={{ flex: 1 }}>
+                {editId === item.id ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={editCustomName}
+                      onChange={e => setEditCustomName(e.target.value)}
+                      placeholder="Custom Name"
+                    />
+                    <input
+                      type="number"
+                      value={editVolume}
+                      onChange={e => setEditVolume(Number(e.target.value))}
+                      min={0}
+                      style={{ width: 80, marginLeft: 8 }}
+                    />
+                    <input
+                      type="text"
+                      value={editNotes}
+                      onChange={e => setEditNotes(e.target.value)}
+                      placeholder="Notes"
+                      style={{ marginLeft: 8 }}
+                    />
+                    <button onClick={() => handleEditSave(item.id)} style={{ marginLeft: 8 }}>Save</button>
+                    <button onClick={handleEditCancel} style={{ marginLeft: 4 }}>Cancel</button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontWeight: 'bold', fontSize: 18 }}>{item.custom_name || item.meta?.name}</div>
+                    <div>Brand: {item.meta?.brand}</div>
+                    <div>Category: {item.meta?.category} {item.meta?.subcategory ? `(${item.meta.subcategory})` : ''}</div>
+                    <div>ABV: {item.meta?.abv}%</div>
+                    <div>Volume: {item.current_volume_ml}ml</div>
+                    {item.notes && <div>Notes: {item.notes}</div>}
+                    <div style={{ fontSize: 12, color: '#aaa' }}>Added: {new Date(item.added_at).toLocaleString()}</div>
+                    <button onClick={() => startEdit(item)} style={{ marginRight: 8, marginTop: 8 }}>Edit</button>
+                    <button onClick={() => handleRemoveFromShelf(item.id)} style={{ marginTop: 8 }}>Remove</button>
+                  </>
+                )}
               </div>
-            ) : (
-              <>
-                <div style={{ fontWeight: 'bold', fontSize: 18 }}>{item.custom_name || item.meta?.name}</div>
-                <div>Brand: {item.meta?.brand}</div>
-                <div>Category: {item.meta?.category} {item.meta?.subcategory ? `(${item.meta.subcategory})` : ''}</div>
-                <div>ABV: {item.meta?.abv}%</div>
-                <div>Volume: {item.current_volume_ml}ml</div>
-                {item.notes && <div>Notes: {item.notes}</div>}
-                <div style={{ fontSize: 12, color: '#aaa' }}>Added: {new Date(item.added_at).toLocaleString()}</div>
-                <button onClick={() => startEdit(item)} style={{ marginRight: 8, marginTop: 8 }}>Edit</button>
-                <button onClick={() => handleRemoveFromShelf(item.id)} style={{ marginTop: 8 }}>Remove</button>
-              </>
-            )}
-          </li>
-        ))}
+            </li>
+          ))}
       </ul>
       {filteredShelf.length === 0 && <div style={{ color: '#aaa' }}>No bottles found for selected filters.</div>}
     </div>
