@@ -88,6 +88,58 @@ function App() {
     return true;
   });
 
+  // --- Add/Edit/Remove state (must be at top level) ---
+  const [addBottleId, setAddBottleId] = useState<string>('');
+  const [addBottleType, setAddBottleType] = useState<string>('');
+  const [addCustomName, setAddCustomName] = useState<string>('');
+  const [addNotes, setAddNotes] = useState<string>('');
+  const [addVolume, setAddVolume] = useState<number>(750);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editCustomName, setEditCustomName] = useState<string>('');
+  const [editNotes, setEditNotes] = useState<string>('');
+  const [editVolume, setEditVolume] = useState<number>(750);
+
+  // --- Add/Edit/Remove handlers (must be at top level) ---
+  async function handleAddToShelf(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addBottleId || !session) return;
+    await supabase.from('shelf_bottles').insert([
+      {
+        user_id: session.user.id,
+        bottle_id: addBottleId,
+        custom_name: addCustomName,
+        notes: addNotes,
+        current_volume_ml: addVolume,
+      },
+    ]);
+    setAddBottleId(''); setAddCustomName(''); setAddNotes(''); setAddVolume(750);
+    getUserShelf(session.user.id);
+  }
+  async function handleRemoveFromShelf(id: string) {
+    if (!session) return;
+    await supabase.from('shelf_bottles').delete().eq('id', id);
+    getUserShelf(session.user.id);
+  }
+  function startEdit(item: typeof shelfWithMeta[number]) {
+    setEditId(item.id);
+    setEditCustomName(item.custom_name);
+    setEditNotes(item.notes);
+    setEditVolume(item.current_volume_ml);
+  }
+  async function handleEditSave(id: string) {
+    if (!session) return;
+    await supabase.from('shelf_bottles').update({
+      custom_name: editCustomName,
+      notes: editNotes,
+      current_volume_ml: editVolume,
+    }).eq('id', id);
+    setEditId(null);
+    getUserShelf(session.user.id);
+  }
+  function handleEditCancel() {
+    setEditId(null);
+  }
+
   if (!session) {
     return (
       <div className="auth-center">
@@ -111,49 +163,124 @@ function App() {
         />
       </div>
     );
-  } else {
-    // Get unique brands and categories for filter dropdowns
-    const brands = Array.from(new Set(allBottles.map(b => b.brand))).sort();
-    const categories = Array.from(new Set(allBottles.map(b => b.category))).sort();
-
-    return (
-      <div style={{ maxWidth: 700, margin: '2rem auto' }}>
-        <button onClick={handleSignOut} style={{ float: 'right' }}>Sign Out</button>
-        <h3>Welcome to Bottle Service, {session.user.email}</h3>
-        <h2>Your Shelf</h2>
-        <div style={{ marginBottom: 16 }}>
-          <label>
-            Filter by Brand:
-            <select value={filter.brand || ''} onChange={e => setFilter(f => ({ ...f, brand: e.target.value || undefined }))}>
-              <option value="">All</option>
-              {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
-            </select>
-          </label>
-          <label style={{ marginLeft: 16 }}>
-            Filter by Category:
-            <select value={filter.category || ''} onChange={e => setFilter(f => ({ ...f, category: e.target.value || undefined }))}>
-              <option value="">All</option>
-              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </label>
-        </div>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {filteredShelf.map(item => (
-            <li key={item.id} style={{ border: '1px solid #444', borderRadius: 8, marginBottom: 12, padding: 12, background: '#222' }}>
-              <div style={{ fontWeight: 'bold', fontSize: 18 }}>{item.custom_name || item.meta?.name}</div>
-              <div>Brand: {item.meta?.brand}</div>
-              <div>Category: {item.meta?.category} {item.meta?.subcategory ? `(${item.meta.subcategory})` : ''}</div>
-              <div>ABV: {item.meta?.abv}%</div>
-              <div>Volume: {item.current_volume_ml}ml</div>
-              {item.notes && <div>Notes: {item.notes}</div>}
-              <div style={{ fontSize: 12, color: '#aaa' }}>Added: {new Date(item.added_at).toLocaleString()}</div>
-            </li>
-          ))}
-        </ul>
-        {filteredShelf.length === 0 && <div style={{ color: '#aaa' }}>No bottles found for selected filters.</div>}
-      </div>
-    );
   }
+
+  // Get unique brands and categories for filter dropdowns
+  const brands = Array.from(new Set(allBottles.map(b => b.brand))).sort();
+  const categories = Array.from(new Set(allBottles.map(b => b.category))).sort();
+
+  return (
+    <div style={{ maxWidth: 700, margin: '2rem auto' }}>
+      <button onClick={handleSignOut} style={{ float: 'right' }}>Sign Out</button>
+      <h3>Welcome to Bottle Service, {session.user.email}</h3>
+      <h2>Your Shelf</h2>
+      {/* Add to shelf form */}
+      <form onSubmit={handleAddToShelf} style={{ marginBottom: 24, background: '#222', padding: 16, borderRadius: 8 }}>
+        <label>
+          Type:
+          <select value={addBottleType} onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); }} style={{ marginLeft: 8 }}>
+            <option value="">Select type...</option>
+            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </label>
+        <label style={{ marginLeft: 16 }}>
+          Add Bottle:
+          <select required value={addBottleId} onChange={e => setAddBottleId(e.target.value)} disabled={!addBottleType} style={{ marginLeft: 8 }}>
+            <option value="">{addBottleType ? 'Select a bottle...' : 'Select type first'}</option>
+            {allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType).map(bottle => (
+              <option key={bottle.id} value={bottle.id}>{bottle.name} ({bottle.brand})</option>
+            ))}
+          </select>
+        </label>
+        <input
+          type="text"
+          placeholder="Custom Name (optional)"
+          value={addCustomName}
+          onChange={e => setAddCustomName(e.target.value)}
+          style={{ marginLeft: 8 }}
+        />
+        <input
+          type="number"
+          placeholder="Volume (ml)"
+          value={addVolume}
+          onChange={e => setAddVolume(Number(e.target.value))}
+          min={0}
+          style={{ marginLeft: 8, width: 80 }}
+        />
+        <input
+          type="text"
+          placeholder="Notes (optional)"
+          value={addNotes}
+          onChange={e => setAddNotes(e.target.value)}
+          style={{ marginLeft: 8 }}
+        />
+        <button type="submit" style={{ marginLeft: 8 }}>Add</button>
+      </form>
+      {/* Filter controls */}
+      <div style={{ marginBottom: 16 }}>
+        <label>
+          Filter by Brand:
+          <select value={filter.brand || ''} onChange={e => setFilter(f => ({ ...f, brand: e.target.value || undefined }))}>
+            <option value="">All</option>
+            {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
+          </select>
+        </label>
+        <label style={{ marginLeft: 16 }}>
+          Filter by Category:
+          <select value={filter.category || ''} onChange={e => setFilter(f => ({ ...f, category: e.target.value || undefined }))}>
+            <option value="">All</option>
+            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </label>
+      </div>
+      {/* Shelf list */}
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {filteredShelf.map(item => (
+          <li key={item.id} style={{ border: '1px solid #444', borderRadius: 8, marginBottom: 12, padding: 12, background: '#222' }}>
+            {editId === item.id ? (
+              <div>
+                <input
+                  type="text"
+                  value={editCustomName}
+                  onChange={e => setEditCustomName(e.target.value)}
+                  placeholder="Custom Name"
+                />
+                <input
+                  type="number"
+                  value={editVolume}
+                  onChange={e => setEditVolume(Number(e.target.value))}
+                  min={0}
+                  style={{ width: 80, marginLeft: 8 }}
+                />
+                <input
+                  type="text"
+                  value={editNotes}
+                  onChange={e => setEditNotes(e.target.value)}
+                  placeholder="Notes"
+                  style={{ marginLeft: 8 }}
+                />
+                <button onClick={() => handleEditSave(item.id)} style={{ marginLeft: 8 }}>Save</button>
+                <button onClick={handleEditCancel} style={{ marginLeft: 4 }}>Cancel</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontWeight: 'bold', fontSize: 18 }}>{item.custom_name || item.meta?.name}</div>
+                <div>Brand: {item.meta?.brand}</div>
+                <div>Category: {item.meta?.category} {item.meta?.subcategory ? `(${item.meta.subcategory})` : ''}</div>
+                <div>ABV: {item.meta?.abv}%</div>
+                <div>Volume: {item.current_volume_ml}ml</div>
+                {item.notes && <div>Notes: {item.notes}</div>}
+                <div style={{ fontSize: 12, color: '#aaa' }}>Added: {new Date(item.added_at).toLocaleString()}</div>
+                <button onClick={() => startEdit(item)} style={{ marginRight: 8, marginTop: 8 }}>Edit</button>
+                <button onClick={() => handleRemoveFromShelf(item.id)} style={{ marginTop: 8 }}>Remove</button>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+      {filteredShelf.length === 0 && <div style={{ color: '#aaa' }}>No bottles found for selected filters.</div>}
+    </div>
+  );
 }
 
 export default App;
