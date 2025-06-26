@@ -172,20 +172,22 @@ function App() {
 
   return (
     <div style={{ maxWidth: 700, margin: '2rem auto' }}>
-      <button onClick={handleSignOut} style={{ float: 'right' }}>Sign Out</button>
-      <div style={{ float: 'right', marginRight: 8, textAlign: 'right' }}>
-        <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
-        <button
-          onClick={() => {
-            window.location.href = 'mailto:ebwinters@comcast.net?subject=Bottle%20Service%20Feedback';
-          }}
-        >
-          Send Feedback
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
+          <button
+            onClick={() => {
+              window.location.href = 'mailto:ebwinters@comcast.net?subject=Bottle%20Service%20Feedback';
+            }}
+            style={{ marginBottom: 8 }}
+          >
+            Send Feedback
+          </button>
+        </div>
+        <button onClick={handleSignOut} style={{ alignSelf: 'flex-start' }}>Sign Out</button>
       </div>
       <h3>Welcome to Bottle Service, {session.user.email}</h3>
-      <h2>Your Shelf</h2>
-      {/* Add to shelf form */}
+      <h2>Your Bar</h2>
       <form onSubmit={handleAddToShelf} style={{ marginBottom: 24, background: '#222', padding: 16, borderRadius: 8 }}>
         <label>
           Type:
