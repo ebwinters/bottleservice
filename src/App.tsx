@@ -91,6 +91,7 @@ function App() {
   // --- Add/Edit/Remove state (must be at top level) ---
   const [addBottleId, setAddBottleId] = useState<string>('');
   const [addBottleType, setAddBottleType] = useState<string>('');
+  const [addBottleSearch, setAddBottleSearch] = useState<string>('');
   const [addCustomName, setAddCustomName] = useState<string>('');
   const [addNotes, setAddNotes] = useState<string>('');
   const [addVolume, setAddVolume] = useState<number>(750);
@@ -178,18 +179,36 @@ function App() {
       <form onSubmit={handleAddToShelf} style={{ marginBottom: 24, background: '#222', padding: 16, borderRadius: 8 }}>
         <label>
           Type:
-          <select value={addBottleType} onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); }} style={{ marginLeft: 8 }}>
+          <select value={addBottleType} onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }} style={{ marginLeft: 8 }}>
             <option value="">Select type...</option>
             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
         </label>
         <label style={{ marginLeft: 16 }}>
+          Search:
+          <input
+            type="text"
+            value={addBottleSearch}
+            onChange={e => setAddBottleSearch(e.target.value)}
+            placeholder="Search bottles..."
+            disabled={!addBottleType}
+            style={{ marginLeft: 8, width: 120 }}
+          />
+        </label>
+        <label style={{ marginLeft: 16 }}>
           Add Bottle:
           <select required value={addBottleId} onChange={e => setAddBottleId(e.target.value)} disabled={!addBottleType} style={{ marginLeft: 8 }}>
             <option value="">{addBottleType ? 'Select a bottle...' : 'Select type first'}</option>
-            {allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType).map(bottle => (
-              <option key={bottle.id} value={bottle.id}>{bottle.name} ({bottle.brand})</option>
-            ))}
+            {allBottles
+              .filter(bottle => !addBottleType || bottle.category === addBottleType)
+              .filter(bottle =>
+                !addBottleSearch ||
+                bottle.name.toLowerCase().includes(addBottleSearch.toLowerCase()) ||
+                bottle.brand.toLowerCase().includes(addBottleSearch.toLowerCase())
+              )
+              .map(bottle => (
+                <option key={bottle.id} value={bottle.id}>{bottle.name} ({bottle.brand})</option>
+              ))}
           </select>
         </label>
         <input
@@ -219,17 +238,17 @@ function App() {
       {/* Filter controls */}
       <div style={{ marginBottom: 16 }}>
         <label>
-          Filter by Brand:
-          <select value={filter.brand || ''} onChange={e => setFilter(f => ({ ...f, brand: e.target.value || undefined }))}>
-            <option value="">All</option>
-            {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
-          </select>
-        </label>
-        <label style={{ marginLeft: 16 }}>
           Filter by Category:
           <select value={filter.category || ''} onChange={e => setFilter(f => ({ ...f, category: e.target.value || undefined }))}>
             <option value="">All</option>
             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </label>
+        <label style={{ marginLeft: 16 }}>
+          Filter by Brand:
+          <select value={filter.brand || ''} onChange={e => setFilter(f => ({ ...f, brand: e.target.value || undefined }))}>
+            <option value="">All</option>
+            {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
           </select>
         </label>
       </div>
