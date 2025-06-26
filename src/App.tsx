@@ -173,6 +173,16 @@ function App() {
   return (
     <div style={{ maxWidth: 700, margin: '2rem auto' }}>
       <button onClick={handleSignOut} style={{ float: 'right' }}>Sign Out</button>
+      <div style={{ float: 'right', marginRight: 8, textAlign: 'right' }}>
+        <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
+        <button
+          onClick={() => {
+            window.location.href = 'mailto:ebwinters@comcast.net?subject=Bottle%20Service%20Feedback';
+          }}
+        >
+          Send Feedback
+        </button>
+      </div>
       <h3>Welcome to Bottle Service, {session.user.email}</h3>
       <h2>Your Shelf</h2>
       {/* Add to shelf form */}
