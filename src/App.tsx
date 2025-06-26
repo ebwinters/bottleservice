@@ -146,7 +146,7 @@ function App() {
       <div className="auth-center">
         <Auth
           supabaseClient={supabase}
-          providers={[]}
+          providers={["github"]}
           appearance={{
             theme: ThemeSupa,
             variables: {
