@@ -32,6 +32,8 @@ type ShelfBottle = {
 
 
 function App() {
+  // Collapsible Add Bottle section
+  const [showAdd, setShowAdd] = useState<boolean>(true);
   const [allBottles, setAllBottles] = useState<Bottle[]>([]);
   const [shelf, setShelf] = useState<ShelfBottle[]>([]);
   const [session, setSession] = useState<Session | null>(null);
@@ -214,66 +216,82 @@ function App() {
         marginLeft: 'auto',
         marginRight: 'auto',
       }}>
-        <h4 style={{ color: 'var(--bar-blue)', margin: 0, marginBottom: 8, fontSize: 18 }}>Add Bottle</h4>
-        <form onSubmit={handleAddToShelf}>
-          <label>
-            Type:
-            <select value={addBottleType} onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }} style={{ marginLeft: 8 }}>
-              <option value="">Select type...</option>
-              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </label>
-          <label style={{ marginLeft: 16 }}>
-            Search:
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            userSelect: 'none',
+            marginBottom: showAdd ? 8 : 0,
+          }}
+          onClick={() => setShowAdd(v => !v)}
+        >
+          <h4 style={{ color: 'var(--bar-blue)', margin: 0, fontSize: 18, flex: 1 }}>
+            Add Bottle
+          </h4>
+          <span style={{ fontSize: 22, marginLeft: 8, color: 'var(--bar-blue)' }}>{showAdd ? '▾' : '▸'}</span>
+        </div>
+        {showAdd && (
+          <form onSubmit={handleAddToShelf}>
+            <label>
+              Type:
+              <select value={addBottleType} onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }} style={{ marginLeft: 8 }}>
+                <option value="">Select type...</option>
+                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </label>
+            <label style={{ marginLeft: 16 }}>
+              Search:
+              <input
+                type="text"
+                value={addBottleSearch}
+                onChange={e => setAddBottleSearch(e.target.value)}
+                placeholder="Search bottles..."
+                disabled={!addBottleType}
+                style={{ marginLeft: 8, width: 120 }}
+              />
+            </label>
+            <label style={{ marginLeft: 16 }}>
+              Add Bottle:
+              <select required value={addBottleId} onChange={e => setAddBottleId(e.target.value)} disabled={!addBottleType} style={{ marginLeft: 8 }}>
+                <option value="">{addBottleType ? 'Select a bottle...' : 'Select type first'}</option>
+                {allBottles
+                  .filter(bottle => !addBottleType || bottle.category === addBottleType)
+                  .filter(bottle =>
+                    !addBottleSearch ||
+                    bottle.name.toLowerCase().includes(addBottleSearch.toLowerCase()) ||
+                    bottle.brand.toLowerCase().includes(addBottleSearch.toLowerCase())
+                  )
+                  .map(bottle => (
+                    <option key={bottle.id} value={bottle.id}>{bottle.name} ({bottle.brand})</option>
+                  ))}
+              </select>
+            </label>
             <input
               type="text"
-              value={addBottleSearch}
-              onChange={e => setAddBottleSearch(e.target.value)}
-              placeholder="Search bottles..."
-              disabled={!addBottleType}
-              style={{ marginLeft: 8, width: 120 }}
+              placeholder="Custom Name (optional)"
+              value={addCustomName}
+              onChange={e => setAddCustomName(e.target.value)}
+              style={{ marginLeft: 8 }}
             />
-          </label>
-          <label style={{ marginLeft: 16 }}>
-            Add Bottle:
-            <select required value={addBottleId} onChange={e => setAddBottleId(e.target.value)} disabled={!addBottleType} style={{ marginLeft: 8 }}>
-              <option value="">{addBottleType ? 'Select a bottle...' : 'Select type first'}</option>
-              {allBottles
-                .filter(bottle => !addBottleType || bottle.category === addBottleType)
-                .filter(bottle =>
-                  !addBottleSearch ||
-                  bottle.name.toLowerCase().includes(addBottleSearch.toLowerCase()) ||
-                  bottle.brand.toLowerCase().includes(addBottleSearch.toLowerCase())
-                )
-                .map(bottle => (
-                  <option key={bottle.id} value={bottle.id}>{bottle.name} ({bottle.brand})</option>
-                ))}
-            </select>
-          </label>
-          <input
-            type="text"
-            placeholder="Custom Name (optional)"
-            value={addCustomName}
-            onChange={e => setAddCustomName(e.target.value)}
-            style={{ marginLeft: 8 }}
-          />
-          <input
-            type="number"
-            placeholder="Volume (ml)"
-            value={addVolume}
-            onChange={e => setAddVolume(Number(e.target.value))}
-            min={0}
-            style={{ marginLeft: 8, width: 80 }}
-          />
-          <input
-            type="text"
-            placeholder="Notes (optional)"
-            value={addNotes}
-            onChange={e => setAddNotes(e.target.value)}
-            style={{ marginLeft: 8 }}
-          />
-          <button type="submit" style={{ marginLeft: 8 }}>Add</button>
-        </form>
+            <input
+              type="number"
+              placeholder="Volume (ml)"
+              value={addVolume}
+              onChange={e => setAddVolume(Number(e.target.value))}
+              min={0}
+              style={{ marginLeft: 8, width: 80 }}
+            />
+            <input
+              type="text"
+              placeholder="Notes (optional)"
+              value={addNotes}
+              onChange={e => setAddNotes(e.target.value)}
+              style={{ marginLeft: 8 }}
+            />
+            <button type="submit" style={{ marginLeft: 8 }}>Add</button>
+          </form>
+        )}
       </div>
       <div style={{ marginBottom: 16 }}>
         <label>
@@ -294,10 +312,10 @@ function App() {
       {/* Shelf grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 220px))',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
         gap: 20,
         marginBottom: 24,
-        justifyContent: 'center',
+        justifyItems: 'center',
       }}>
         {filteredShelf.map(item => (
           <div key={item.id} style={{
