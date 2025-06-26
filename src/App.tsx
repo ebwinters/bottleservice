@@ -186,8 +186,24 @@ function App() {
         </div>
         <button onClick={handleSignOut} style={{ alignSelf: 'flex-start' }}>Sign Out</button>
       </div>
-      <h3>Welcome to Bottle Service, {session.user.email}</h3>
-      <h2>Your Bar</h2>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 18,
+        marginBottom: 20,
+        padding: '10px 24px'
+      }}>
+        <img
+          src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/2761b822-ae88-48f9-a09b-49eb40261a50/d6p1u28-6ada434d-15c1-4c67-a52e-81a504637a5b.png/v1/fill/w_1024,h_1024/cartoon_martini_by_deathbycartoon_d6p1u28-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTAyNCIsInBhdGgiOiJcL2ZcLzI3NjFiODIyLWFlODgtNDhmOS1hMDliLTQ5ZWI0MDI2MWE1MFwvZDZwMXUyOC02YWRhNDM0ZC0xNWMxLTRjNjctYTUyZS04MWE1MDQ2MzdhNWIucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.WMTSKZ2WFwbV5GlHy1tcGCVHS2WEUiOT3KMmRDHjEjU"
+          alt="Martini"
+          style={{ height: 54, width: 54, borderRadius: 12, boxShadow: '0 2px 16pxrgb(165, 101, 197)' }}
+        />
+        <h1 className="bar-title" style={{ fontFamily: 'Myriad, cursive', margin: 0, color: '#4b2e5a', textShadow: '2px 2px 0 #f7a24b' }}>
+          Bottleservice
+        </h1>
+      </div>
+      <h3 style={{ color: 'var(--bar-purple)' }}>Welcome, {session.user.email}</h3>
+      <h2 style={{ color: 'var(--bar-orange)', marginBottom: 12 }}>Your Bar</h2>
       <form onSubmit={handleAddToShelf} style={{ marginBottom: 24, background: '#222', padding: 16, borderRadius: 8 }}>
         <label>
           Type:
