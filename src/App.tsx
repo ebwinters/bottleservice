@@ -4,6 +4,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Bottle } from "./types/bottle";
 import type { ShelfBottle } from "./types/shelfBottle";
+import type { CustomBottle } from "./types/customBottle";
 import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
 import theme from './mui-theme';
 
@@ -14,6 +15,7 @@ function App() {
   const [showAdd, setShowAdd] = useState<boolean>(true);
   const [allBottles, setAllBottles] = useState<Bottle[]>([]);
   const [shelf, setShelf] = useState<ShelfBottle[]>([]);
+  const [customBottles, setCustomBottles] = useState<CustomBottle[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [filter, setFilter] = useState<{ brand?: string; category?: string }>({});
 
@@ -30,16 +32,22 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Fetch all bottles and user shelf
+  // Fetch all bottles, user shelf, and custom bottles
   useEffect(() => {
     if (session) {
       getAllBottles();
       getUserShelf(session.user.id);
+      getCustomBottles(session.user.id);
     } else {
       setAllBottles([]);
       setShelf([]);
+      setCustomBottles([]);
     }
   }, [session]);
+  async function getCustomBottles(userId: string) {
+    const { data } = await supabase.from("custom_bottles").select().eq('user_id', userId);
+    setCustomBottles((data as CustomBottle[]) || []);
+  }
 
   async function getAllBottles() {
     const { data } = await supabase.from("bottles").select();
@@ -55,24 +63,33 @@ function App() {
     await supabase.auth.signOut()
   }
 
-  // Merge shelf with bottle metadata
+  // Merge shelf with bottle metadata and custom bottles
   const shelfWithMeta = shelf.map(shelfBottle => {
+    // If bottle_id matches a regular bottle
     const meta = allBottles.find(b => b.id === shelfBottle.bottle_id);
-    return { ...shelfBottle, meta };
+    // If not found, check if it's a custom bottle
+    const custom = customBottles.find(cb => cb.id === shelfBottle.bottle_id);
+    return { ...shelfBottle, meta, custom };
   });
 
   // Filtering + Search
   const [bottleSearch, setBottleSearch] = useState<string>('');
   const filteredShelf = shelfWithMeta.filter(item => {
-    if (filter.brand && item.meta?.brand !== filter.brand) return false;
-    if (filter.category && item.meta?.category !== filter.category) return false;
+    // Category filter: if "Custom", only show custom bottles
+    if (filter.category === 'Custom') {
+      if (!item.custom) return false;
+    } else {
+      if (filter.brand && item.meta?.brand !== filter.brand) return false;
+      if (filter.category && item.meta?.category !== filter.category) return false;
+    }
     if (bottleSearch) {
       const q = bottleSearch.toLowerCase();
-      const name = item.meta?.name?.toLowerCase() || '';
-      const custom = item.custom_name?.toLowerCase() || '';
+      const name = item.meta?.name?.toLowerCase() || item.custom?.name?.toLowerCase() || '';
+      const customName = item.custom_name?.toLowerCase() || '';
       const brand = item.meta?.brand?.toLowerCase() || '';
       const notes = item.notes?.toLowerCase() || '';
-      if (!name.includes(q) && !custom.includes(q) && !brand.includes(q) && !notes.includes(q)) return false;
+      const subcat = item.custom?.subcategory?.toLowerCase() || '';
+      if (!name.includes(q) && !customName.includes(q) && !brand.includes(q) && !notes.includes(q) && !subcat.includes(q)) return false;
     }
     return true;
   });
@@ -84,6 +101,7 @@ function App() {
   const [addCustomName, setAddCustomName] = useState<string>('');
   const [addNotes, setAddNotes] = useState<string>('');
   const [addVolume, setAddVolume] = useState<number>(750);
+  const [addABV, setAddABV] = useState<number>(40);
   const [editId, setEditId] = useState<string | null>(null);
   const [editCustomName, setEditCustomName] = useState<string>('');
   const [editNotes, setEditNotes] = useState<string>('');
@@ -162,7 +180,10 @@ function App() {
 
   // Get unique brands and categories for filter dropdowns
   const brands = Array.from(new Set(allBottles.map(b => b.brand))).sort();
-  const categories = Array.from(new Set(allBottles.map(b => b.category))).sort();
+  const categories = [
+    ...Array.from(new Set(allBottles.map(b => b.category))).sort(),
+    'Custom',
+  ];
 
   return (
     <ThemeProvider theme={theme}>
@@ -232,44 +253,92 @@ function App() {
                     onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }}
                   >
                     <MenuItem value=""><em>Select type...</em></MenuItem>
-                    {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
+            {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
                   </Select>
                 </FormControl>
-                <Autocomplete
-                  options={allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType)}
-                  getOptionLabel={option => `${option.name} (${option.brand})`}
-                  value={allBottles.find(b => b.id === addBottleId) || null}
-                  onChange={(_e, newValue) => setAddBottleId(newValue ? newValue.id : '')}
-                  inputValue={addBottleSearch}
-                  onInputChange={(_e, newInputValue) => setAddBottleSearch(newInputValue)}
-                  disabled={!addBottleType}
-                  renderInput={params => (
-                    <TextField {...params} label="Search & Select Bottle" size="small" sx={{ minWidth: 220 }} required />
-                  )}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                />
-                <TextField
-                  label="Custom Name"
-                  value={addCustomName}
-                  onChange={e => setAddCustomName(e.target.value)}
-                  size="small"
-                />
-                <TextField
-                  label="Volume (ml)"
-                  type="number"
-                  value={addVolume}
-                  onChange={e => setAddVolume(Number(e.target.value))}
-                  size="small"
-                  sx={{ width: 100 }}
-                  inputProps={{ min: 0 }}
-                />
-                <TextField
-                  label="Notes"
-                  value={addNotes}
-                  onChange={e => setAddNotes(e.target.value)}
-                  size="small"
-                />
-                <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80 }}>Add</Button>
+                {/* If type is Custom, show custom bottle form, else show regular bottle autocomplete */}
+                {addBottleType === 'Custom' ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 220 }}>
+                    <TextField label="Name" value={addCustomName} onChange={e => setAddCustomName(e.target.value)} size="small" required />
+                    <TextField label="Subcategory" value={addNotes} onChange={e => setAddNotes(e.target.value)} size="small" required />
+                    <TextField label="ABV (%)" type="number" value={addABV} onChange={e => setAddABV(Number(e.target.value))} size="small" required />
+                    <TextField label="Volume (ml)" type="number" value={addVolume} onChange={e => setAddVolume(Number(e.target.value))} size="small" required />
+                    <Button variant="contained" onClick={async () => {
+                      if (!session) return;
+                      // Create the custom bottle
+                      const { data, error, status } = await supabase.from('custom_bottles').insert([
+                        {
+                          user_id: session.user.id,
+                          name: addCustomName,
+                          subcategory: addNotes,
+                          abv: addABV,
+                          volume_ml: addVolume,
+                        }
+                      ]).select();
+                      if (status === 201 && data && data[0]) {
+                        const customBottle = data[0];
+                        // Add to shelf_bottles
+                        await supabase.from('shelf_bottles').insert([
+                          {
+                            user_id: session.user.id,
+                            bottle_id: customBottle.id,
+                            custom_name: customBottle.name,
+                            notes: '',
+                            current_volume_ml: customBottle.volume_ml,
+                          }
+                        ]);
+                        getCustomBottles(session.user.id);
+                        getUserShelf(session.user.id);
+                        setAddCustomName('');
+                        setAddNotes('');
+                        setAddVolume(750);
+                        setAddABV(40);
+                      } else {
+                        alert('Failed to add custom bottle');
+                      }
+                    }}>Create Custom Bottle</Button>
+                  </Box>
+                ) : (
+                  <Autocomplete
+                    options={allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType)}
+                    getOptionLabel={option => `${option.name} (${option.brand})`}
+                    value={allBottles.find(b => b.id === addBottleId) || null}
+                    onChange={(_e, newValue) => setAddBottleId(newValue ? newValue.id : '')}
+                    inputValue={addBottleSearch}
+                    onInputChange={(_e, newInputValue) => setAddBottleSearch(newInputValue)}
+                    disabled={!addBottleType}
+                    renderInput={params => (
+                      <TextField {...params} label="Search & Select Bottle" size="small" sx={{ minWidth: 220 }} required />
+                    )}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                  />
+                )}
+                {addBottleType !== 'Custom' && (
+                  <>
+                    <TextField
+                      label="Custom Name"
+                      value={addCustomName}
+                      onChange={e => setAddCustomName(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      label="Volume (ml)"
+                      type="number"
+                      value={addVolume}
+                      onChange={e => setAddVolume(Number(e.target.value))}
+                      size="small"
+                      sx={{ width: 100 }}
+                      inputProps={{ min: 0 }}
+                    />
+                    <TextField
+                      label="Notes"
+                      value={addNotes}
+                      onChange={e => setAddNotes(e.target.value)}
+                      size="small"
+                    />
+                    <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80 }}>Add</Button>
+                  </>
+                )}
               </Box>
             )}
           </Box>
@@ -357,14 +426,25 @@ function App() {
                   ) : (
                     <>
                       <Typography variant="subtitle1" fontWeight={600} align="center">
-                        {item.custom_name || item.meta?.name}
+                        {item.custom ? item.custom.name : (item.custom_name || item.meta?.name)}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" align="center">{item.meta?.brand}</Typography>
-                      <Typography variant="body2" align="center">{item.meta?.category}{item.meta?.subcategory ? ` (${item.meta.subcategory})` : ''}</Typography>
-                      <Typography variant="body2" align="center">ABV: {item.meta?.abv}%</Typography>
-                      <Typography variant="body2" align="center">Vol: {item.current_volume_ml}ml</Typography>
+                      {item.custom ? (
+                        <>
+                          <Typography variant="body2" color="text.secondary" align="center">Custom Bottle</Typography>
+                          <Typography variant="body2" align="center">{item.custom.subcategory}</Typography>
+                          <Typography variant="body2" align="center">ABV: {item.custom.abv}%</Typography>
+                          <Typography variant="body2" align="center">Vol: {item.custom.volume_ml}ml</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Typography variant="body2" color="text.secondary" align="center">{item.meta?.brand}</Typography>
+                          <Typography variant="body2" align="center">{item.meta?.category}{item.meta?.subcategory ? ` (${item.meta.subcategory})` : ''}</Typography>
+                          <Typography variant="body2" align="center">ABV: {item.meta?.abv}%</Typography>
+                          <Typography variant="body2" align="center">Vol: {item.current_volume_ml}ml</Typography>
+                        </>
+                      )}
                       {item.notes && <Typography variant="caption" color="text.secondary" display="block">Notes: {item.notes}</Typography>}
-                      <Typography variant="caption" color="text.disabled" display="block">Added: {new Date(item.added_at).toLocaleString()}</Typography>
+                      <Typography variant="caption" color="text.disabled" display="block" align="center">Added: {new Date(item.added_at).toLocaleString()}</Typography>
                       <CardActions sx={{ justifyContent: 'center', mt: 1 }}>
                         <Button onClick={() => startEdit(item)} size="small" variant="outlined">Edit</Button>
                         <Button onClick={() => handleRemoveFromShelf(item.id)} size="small" color="error" variant="outlined">Remove</Button>
