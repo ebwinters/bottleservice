@@ -4,7 +4,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Bottle } from "./types/bottle";
 import type { ShelfBottle } from "./types/shelfBottle";
-import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
 import theme from './mui-theme';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
@@ -215,36 +215,19 @@ function App() {
                     {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
                   </Select>
                 </FormControl>
-                <TextField
-                  label="Search"
-                  value={addBottleSearch}
-                  onChange={e => setAddBottleSearch(e.target.value)}
+                <Autocomplete
+                  options={allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType)}
+                  getOptionLabel={option => `${option.name} (${option.brand})`}
+                  value={allBottles.find(b => b.id === addBottleId) || null}
+                  onChange={(_e, newValue) => setAddBottleId(newValue ? newValue.id : '')}
+                  inputValue={addBottleSearch}
+                  onInputChange={(_e, newInputValue) => setAddBottleSearch(newInputValue)}
                   disabled={!addBottleType}
-                  size="small"
-                  sx={{ minWidth: 120 }}
+                  renderInput={params => (
+                    <TextField {...params} label="Search & Select Bottle" size="small" sx={{ minWidth: 220 }} required />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
                 />
-                <FormControl sx={{ minWidth: 180 }} size="small">
-                  <InputLabel>Bottle</InputLabel>
-                  <Select
-                    value={addBottleId}
-                    label="Bottle"
-                    onChange={e => setAddBottleId(e.target.value)}
-                    disabled={!addBottleType}
-                    required
-                  >
-                    <MenuItem value="">{addBottleType ? 'Select a bottle...' : 'Select type first'}</MenuItem>
-                    {allBottles
-                      .filter(bottle => !addBottleType || bottle.category === addBottleType)
-                      .filter(bottle =>
-                        !addBottleSearch ||
-                        bottle.name.toLowerCase().includes(addBottleSearch.toLowerCase()) ||
-                        bottle.brand.toLowerCase().includes(addBottleSearch.toLowerCase())
-                      )
-                      .map(bottle => (
-                        <MenuItem key={bottle.id} value={bottle.id}>{bottle.name} ({bottle.brand})</MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
                 <TextField
                   label="Custom Name"
                   value={addCustomName}
