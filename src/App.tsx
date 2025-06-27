@@ -61,10 +61,19 @@ function App() {
     return { ...shelfBottle, meta };
   });
 
-  // Filtering
+  // Filtering + Search
+  const [bottleSearch, setBottleSearch] = useState<string>('');
   const filteredShelf = shelfWithMeta.filter(item => {
     if (filter.brand && item.meta?.brand !== filter.brand) return false;
     if (filter.category && item.meta?.category !== filter.category) return false;
+    if (bottleSearch) {
+      const q = bottleSearch.toLowerCase();
+      const name = item.meta?.name?.toLowerCase() || '';
+      const custom = item.custom_name?.toLowerCase() || '';
+      const brand = item.meta?.brand?.toLowerCase() || '';
+      const notes = item.notes?.toLowerCase() || '';
+      if (!name.includes(q) && !custom.includes(q) && !brand.includes(q) && !notes.includes(q)) return false;
+    }
     return true;
   });
 
@@ -264,8 +273,8 @@ function App() {
               </Box>
             )}
           </Box>
-          {/* Filter Bar */}
-          <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+          {/* Filter Bar + Search */}
+          <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Category</InputLabel>
               <Select
@@ -288,6 +297,13 @@ function App() {
                 {brands.map(brand => <MenuItem key={brand} value={brand}>{brand}</MenuItem>)}
               </Select>
             </FormControl>
+            <TextField
+              size="small"
+              label="Search your bottles"
+              value={bottleSearch}
+              onChange={e => setBottleSearch(e.target.value)}
+              sx={{ minWidth: 220 }}
+            />
           </Box>
           {/* Shelf Grid */}
           <Box sx={{
