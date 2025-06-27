@@ -193,7 +193,7 @@ function App() {
               <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
               <button
                 onClick={() => {
-                  window.location.href = 'mailto:ebwinters@comcast.net?subject=Bottle%20Service%20Feedback';
+                  window.location.href = 'mailto:bottleserviceapp967@gmail.com?subject=Bottle%20Service%20Feedback';
                 }}
                 style={{ marginBottom: 8 }}
               >
