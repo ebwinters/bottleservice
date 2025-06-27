@@ -29,7 +29,6 @@ body {
   align-items: center;
   min-width: 320px;
   min-height: 100vh;
-  width: 100vw;
 }
 /* Center the Supabase Auth form */
 .auth-center {

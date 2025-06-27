@@ -173,7 +173,7 @@ function App() {
   const categories = Array.from(new Set(allBottles.map(b => b.category))).sort();
 
   return (
-    <div style={{ maxWidth: 700, margin: '2rem auto' }}>
+    <div style={{ margin: '2rem auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
           <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
