@@ -173,6 +173,12 @@ function App() {
       </AppBar>
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <div style={{ margin: '2rem auto' }}>
+          {/* Welcome back message */}
+          {session && (
+            <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+              Welcome back, {session.user.user_metadata?.full_name || session.user.email}!
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div>
               <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
