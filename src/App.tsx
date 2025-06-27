@@ -160,6 +160,11 @@ function App() {
       <CssBaseline />
       <AppBar position="static" color="primary" elevation={1}>
         <Toolbar>
+          <img
+            src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/2761b822-ae88-48f9-a09b-49eb40261a50/d6p1u28-6ada434d-15c1-4c67-a52e-81a504637a5b.png/v1/fill/w_1024,h_1024/cartoon_martini_by_deathbycartoon_d6p1u28-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTAyNCIsInBhdGgiOiJcL2ZcLzI3NjFiODIyLWFlODgtNDhmOS1hMDliLTQ5ZWI0MDI2MWE1MFwvZDZwMXUyOC02YWRhNDM0ZC0xNWMxLTRjNjctYTUyZS04MWE1MDQ2MzdhNWIucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.WMTSKZ2WFwbV5GlHy1tcGCVHS2WEUiOT3KMmRDHjEjU"
+            alt="Martini"
+            style={{ background: 'white', height: 36, width: 36, borderRadius: 8, marginRight: 16, boxShadow: '0 2px 8px #fff' }}
+          />
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
             Bottleservice
           </Typography>
