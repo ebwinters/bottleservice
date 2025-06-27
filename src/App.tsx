@@ -266,7 +266,7 @@ function App() {
                     <Button variant="contained" onClick={async () => {
                       if (!session) return;
                       // Create the custom bottle
-                      const { data, error, status } = await supabase.from('custom_bottles').insert([
+                      const { data, status } = await supabase.from('custom_bottles').insert([
                         {
                           user_id: session.user.id,
                           name: addCustomName,
