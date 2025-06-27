@@ -2,34 +2,10 @@ import { useEffect, useState } from "react";
 import { createClient, type Session } from "@supabase/supabase-js";
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
+import type { Bottle } from "./types/bottle";
+import type { ShelfBottle } from "./types/shelfBottle";
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
-
-
-// Bottle metadata (all bottles)
-type Bottle = {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  subcategory: string;
-  abv: number;
-  volume_ml: number;
-  image_url: string | null;
-  created_at: string;
-};
-
-// User's shelf bottle
-type ShelfBottle = {
-  id: string;
-  user_id: string;
-  bottle_id: string;
-  custom_name: string;
-  current_volume_ml: number;
-  notes: string;
-  added_at: string;
-};
-
 
 function App() {
   // Collapsible Add Bottle section
