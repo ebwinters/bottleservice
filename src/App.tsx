@@ -6,7 +6,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Bottle } from "./types/bottle";
 import type { ShelfBottle } from "./types/shelfBottle";
 import type { CustomBottle } from "./types/customBottle";
-import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
+import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab } from '@mui/material';
 import theme from './mui-theme';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
@@ -19,6 +19,8 @@ function App() {
   const [customBottles, setCustomBottles] = useState<CustomBottle[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [filter, setFilter] = useState<{ brand?: string; category?: string }>({});
+  // Tab state
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   // Fetch session
   useEffect(() => {
@@ -215,22 +217,8 @@ function App() {
         </a>
       </Box>
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        {/* SEO Content Section */}
-        <Box sx={{ bgcolor: '#fffbe7', border: '1px solid #ffe0b2', borderRadius: 2, p: 3, mb: 4, boxShadow: 1 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-            How to Track Your Home Bar Inventory
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Bottleservice makes it easy to manage your home bar. Add bottles, track what you have, and never run out of your favorite spirits. Whether you’re a cocktail enthusiast or a home bartender, keeping your bar organized helps you mix drinks with confidence.
-          </Typography>
-          <Typography variant="h6" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>
-            Best Apps for Home Bartenders
-          </Typography>
-          <Typography variant="body2">
-            Looking for the best way to manage your bar? Bottleservice is designed for home bartenders who want to track inventory, discover new bottles, and get the most out of their collection. Try it today and see why it’s a top choice for home bar management!
-          </Typography>
-        </Box>
-        <div style={{ margin: '2rem auto' }}>
+        {/* Welcome and Feedback Section - Moved Above */}
+        <div style={{ marginBottom: '1.5rem' }}>
           {/* Welcome back message */}
           {session && (
             <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
@@ -262,240 +250,285 @@ function App() {
               </button>
             </div>
           </div>
-          {/* Add Bottle Form */}
-          <Box sx={{
-            border: '2px solid',
-            borderColor: 'primary.light',
-            borderRadius: 2,
-            p: 3,
-            mb: 3,
-            boxShadow: 2,
-            maxWidth: 600,
-            mx: 'auto',
-            bgcolor: 'background.paper',
-          }}>
-            <Box
-              sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none', mb: showAdd ? 1 : 0 }}
-              onClick={() => setShowAdd(v => !v)}
-            >
-              <Typography variant="h6" color="primary" sx={{ flex: 1 }}>
-                Add Bottle
-              </Typography>
-              <Typography variant="h5" color="primary" sx={{ ml: 1 }}>{showAdd ? '▾' : '▸'}</Typography>
-            </Box>
-            {showAdd && (
-              <Box component="form" onSubmit={handleAddToShelf} sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', mt: 1 }}>
-                <FormControl sx={{ minWidth: 120 }} size="small">
-                  <InputLabel>Type</InputLabel>
-                  <Select
-                    value={addBottleType}
-                    label="Type"
-                    onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }}
-                  >
-                    <MenuItem value=""><em>Select type...</em></MenuItem>
-            {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
-                  </Select>
-                </FormControl>
-                {/* If type is Custom, show custom bottle form, else show regular bottle autocomplete */}
-                {addBottleType === 'Custom' ? (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 220 }}>
-                    <TextField label="Name" value={addCustomName} onChange={e => setAddCustomName(e.target.value)} size="small" required />
-                    <TextField label="Subcategory" value={addNotes} onChange={e => setAddNotes(e.target.value)} size="small" required />
-                    <TextField label="ABV (%)" type="number" value={addABV} onChange={e => setAddABV(Number(e.target.value))} size="small" required />
-                    <TextField label="Volume (ml)" type="number" value={addVolume} onChange={e => setAddVolume(Number(e.target.value))} size="small" required />
-                    <Button variant="contained" onClick={async () => {
-                      if (!session) return;
-                      // Create the custom bottle
-                      const { data, status } = await supabase.from('custom_bottles').insert([
-                        {
-                          user_id: session.user.id,
-                          name: addCustomName,
-                          subcategory: addNotes,
-                          abv: addABV,
-                          volume_ml: addVolume,
-                        }
-                      ]).select();
-                      if (status === 201 && data && data[0]) {
-                        const customBottle = data[0];
-                        // Add to shelf_bottles
-                        await supabase.from('shelf_bottles').insert([
+        </div>
+        
+        {/* App Information Box */}
+        <Box sx={{ bgcolor: '#fffbe7', border: '1px solid #ffe0b2', borderRadius: 2, p: 3, mb: 4, boxShadow: 1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+            How to Track Your Home Bar Inventory
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Add bottles to your inventory by selecting from a prefilled list of liquor bottles or by selecting the custom category. Use the View Your Shelf tab to browse and filter your collection. Integrate with the MCP server to support advanced, natural-language querying of your inventory!
+          </Typography>
+        </Box>
+        
+        {/* Tabs */}
+        <Box sx={{ width: '100%', mb: 3 }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(_event, newValue) => setActiveTab(newValue)}
+            variant="fullWidth"
+            indicatorColor="primary"
+            textColor="primary"
+            sx={{ 
+              borderBottom: 1, 
+              borderColor: 'divider',
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                fontSize: '1rem',
+              }
+            }}
+          >
+            <Tab label="Add a Bottle" />
+            <Tab label="View Your Shelf" />
+          </Tabs>
+        </Box>
+
+        {/* Tab Content */}
+        <div style={{ margin: '1rem auto' }}>
+          {/* Add Bottle Tab */}
+          {activeTab === 0 && (
+            <Box sx={{
+              border: '2px solid',
+              borderColor: 'primary.light',
+              borderRadius: 2,
+              p: 3,
+              mb: 3,
+              boxShadow: 2,
+              maxWidth: 600,
+              mx: 'auto',
+              bgcolor: 'background.paper',
+            }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none', mb: showAdd ? 1 : 0 }}
+                onClick={() => setShowAdd(v => !v)}
+              >
+                <Typography variant="h6" color="primary" sx={{ flex: 1 }}>
+                  Add Bottle
+                </Typography>
+                <Typography variant="h5" color="primary" sx={{ ml: 1 }}>{showAdd ? '▾' : '▸'}</Typography>
+              </Box>
+              {showAdd && (
+                <Box component="form" onSubmit={handleAddToShelf} sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', mt: 1 }}>
+                  <FormControl sx={{ minWidth: 120 }} size="small">
+                    <InputLabel>Type</InputLabel>
+                    <Select
+                      value={addBottleType}
+                      label="Type"
+                      onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }}
+                    >
+                      <MenuItem value=""><em>Select type...</em></MenuItem>
+              {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  {/* If type is Custom, show custom bottle form, else show regular bottle autocomplete */}
+                  {addBottleType === 'Custom' ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 220 }}>
+                      <TextField label="Name" value={addCustomName} onChange={e => setAddCustomName(e.target.value)} size="small" required />
+                      <TextField label="Subcategory" value={addNotes} onChange={e => setAddNotes(e.target.value)} size="small" required />
+                      <TextField label="ABV (%)" type="number" value={addABV} onChange={e => setAddABV(Number(e.target.value))} size="small" required />
+                      <TextField label="Volume (ml)" type="number" value={addVolume} onChange={e => setAddVolume(Number(e.target.value))} size="small" required />
+                      <Button variant="contained" onClick={async () => {
+                        if (!session) return;
+                        // Create the custom bottle
+                        const { data, status } = await supabase.from('custom_bottles').insert([
                           {
                             user_id: session.user.id,
-                            bottle_id: customBottle.id,
-                            custom_name: customBottle.name,
-                            notes: '',
-                            current_volume_ml: customBottle.volume_ml,
+                            name: addCustomName,
+                            subcategory: addNotes,
+                            abv: addABV,
+                            volume_ml: addVolume,
                           }
-                        ]);
-                        getCustomBottles(session.user.id);
-                        getUserShelf(session.user.id);
-                        setAddCustomName('');
-                        setAddNotes('');
-                        setAddVolume(750);
-                        setAddABV(40);
-                      } else {
-                        alert('Failed to add custom bottle');
-                      }
-                    }}>Create Custom Bottle</Button>
-                  </Box>
-                ) : (
-                  <Autocomplete
-                    options={allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType)}
-                    getOptionLabel={option => `${option.name} (${option.brand})`}
-                    value={allBottles.find(b => b.id === addBottleId) || null}
-                    onChange={(_e, newValue) => setAddBottleId(newValue ? newValue.id : '')}
-                    inputValue={addBottleSearch}
-                    onInputChange={(_e, newInputValue) => setAddBottleSearch(newInputValue)}
-                    disabled={!addBottleType}
-                    renderInput={params => (
-                      <TextField {...params} label="Search & Select Bottle" size="small" sx={{ minWidth: 220 }} required />
-                    )}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                  />
-                )}
-                {addBottleType !== 'Custom' && (
-                  <>
-                    <TextField
-                      label="Custom Name"
-                      value={addCustomName}
-                      onChange={e => setAddCustomName(e.target.value)}
-                      size="small"
+                        ]).select();
+                        if (status === 201 && data && data[0]) {
+                          const customBottle = data[0];
+                          // Add to shelf_bottles
+                          await supabase.from('shelf_bottles').insert([
+                            {
+                              user_id: session.user.id,
+                              bottle_id: customBottle.id,
+                              custom_name: customBottle.name,
+                              notes: '',
+                              current_volume_ml: customBottle.volume_ml,
+                            }
+                          ]);
+                          getCustomBottles(session.user.id);
+                          getUserShelf(session.user.id);
+                          setAddCustomName('');
+                          setAddNotes('');
+                          setAddVolume(750);
+                          setAddABV(40);
+                        } else {
+                          alert('Failed to add custom bottle');
+                        }
+                      }}>Create Custom Bottle</Button>
+                    </Box>
+                  ) : (
+                    <Autocomplete
+                      options={allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType)}
+                      getOptionLabel={option => `${option.name} (${option.brand})`}
+                      value={allBottles.find(b => b.id === addBottleId) || null}
+                      onChange={(_e, newValue) => setAddBottleId(newValue ? newValue.id : '')}
+                      inputValue={addBottleSearch}
+                      onInputChange={(_e, newInputValue) => setAddBottleSearch(newInputValue)}
+                      disabled={!addBottleType}
+                      renderInput={params => (
+                        <TextField {...params} label="Search & Select Bottle" size="small" sx={{ minWidth: 220 }} required />
+                      )}
+                      isOptionEqualToValue={(option, value) => option.id === value.id}
                     />
-                    <TextField
-                      label="Volume (ml)"
-                      type="number"
-                      value={addVolume}
-                      onChange={e => setAddVolume(Number(e.target.value))}
-                      size="small"
-                      sx={{ width: 100 }}
-                      inputProps={{ min: 0 }}
-                    />
-                    <TextField
-                      label="Notes"
-                      value={addNotes}
-                      onChange={e => setAddNotes(e.target.value)}
-                      size="small"
-                    />
-                    <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80 }}>Add</Button>
-                  </>
-                )}
-              </Box>
-            )}
-          </Box>
-          {/* Filter Bar + Search */}
-          <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={filter.category || ''}
-                label="Category"
-                onChange={e => setFilter(f => ({ ...f, category: e.target.value || undefined }))}
-              >
-                <MenuItem value="">All</MenuItem>
-                {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel>Brand</InputLabel>
-              <Select
-                value={filter.brand || ''}
-                label="Brand"
-                onChange={e => setFilter(f => ({ ...f, brand: e.target.value || undefined }))}
-              >
-                <MenuItem value="">All</MenuItem>
-                {brands.map(brand => <MenuItem key={brand} value={brand}>{brand}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <TextField
-              size="small"
-              label="Search your bottles"
-              value={bottleSearch}
-              onChange={e => setBottleSearch(e.target.value)}
-              sx={{ minWidth: 220 }}
-            />
-          </Box>
-          {/* Shelf Grid */}
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-            gap: 3,
-            mb: 4,
-            justifyItems: 'center',
-          }}>
-            {filteredShelf.map(item => (
-              <Card key={item.id} sx={{ maxWidth: 240, width: '100%', bgcolor: 'background.paper', boxShadow: 3 }}>
-                {item.meta?.image_url && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', pt: 2 }}>
-                    <img src={item.meta.image_url} alt={item.meta.name} style={{ width: 60, height: 110, objectFit: 'contain', background: '#fff', borderRadius: 6 }} />
-                  </Box>
-                )}
-                <CardContent>
-                  {editId === item.id ? (
+                  )}
+                  {addBottleType !== 'Custom' && (
                     <>
                       <TextField
                         label="Custom Name"
-                        value={editCustomName}
-                        onChange={e => setEditCustomName(e.target.value)}
+                        value={addCustomName}
+                        onChange={e => setAddCustomName(e.target.value)}
                         size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
                       />
                       <TextField
                         label="Volume (ml)"
                         type="number"
-                        value={editVolume}
-                        onChange={e => setEditVolume(Number(e.target.value))}
+                        value={addVolume}
+                        onChange={e => setAddVolume(Number(e.target.value))}
                         size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
+                        sx={{ width: 100 }}
                         inputProps={{ min: 0 }}
                       />
                       <TextField
                         label="Notes"
-                        value={editNotes}
-                        onChange={e => setEditNotes(e.target.value)}
+                        value={addNotes}
+                        onChange={e => setAddNotes(e.target.value)}
                         size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
                       />
-                      <CardActions>
-                        <Button onClick={() => handleEditSave(item.id)} variant="contained" size="small" sx={{ mr: 1 }}>Save</Button>
-                        <Button onClick={handleEditCancel} variant="outlined" size="small">Cancel</Button>
-                      </CardActions>
+                      <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80 }}>Add</Button>
                     </>
-                  ) : (
-                    <>
-                      <Typography variant="subtitle1" fontWeight={600} align="center">
-                        {item.custom ? item.custom.name : (item.custom_name || item.meta?.name)}
-                      </Typography>
-                      {item.custom ? (
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* View Shelf Tab */}
+          {activeTab === 1 && (
+            <>
+              {/* Filter Bar + Search */}
+              <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <FormControl size="small" sx={{ minWidth: 140 }}>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={filter.category || ''}
+                    label="Category"
+                    onChange={e => setFilter(f => ({ ...f, category: e.target.value || undefined }))}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 140 }}>
+                  <InputLabel>Brand</InputLabel>
+                  <Select
+                    value={filter.brand || ''}
+                    label="Brand"
+                    onChange={e => setFilter(f => ({ ...f, brand: e.target.value || undefined }))}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    {brands.map(brand => <MenuItem key={brand} value={brand}>{brand}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small"
+                  label="Search your bottles"
+                  value={bottleSearch}
+                  onChange={e => setBottleSearch(e.target.value)}
+                  sx={{ minWidth: 220 }}
+                />
+              </Box>
+              
+              {/* Shelf Grid */}
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                gap: 3,
+                mb: 4,
+                justifyItems: 'center',
+              }}>
+                {filteredShelf.map(item => (
+                  <Card key={item.id} sx={{ maxWidth: 240, width: '100%', bgcolor: 'background.paper', boxShadow: 3 }}>
+                    {item.meta?.image_url && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', pt: 2 }}>
+                        <img src={item.meta.image_url} alt={item.meta.name} style={{ width: 60, height: 110, objectFit: 'contain', background: '#fff', borderRadius: 6 }} />
+                      </Box>
+                    )}
+                    <CardContent>
+                      {editId === item.id ? (
                         <>
-                          <Typography variant="body2" color="text.secondary" align="center">Custom Bottle</Typography>
-                          <Typography variant="body2" align="center">{item.custom.subcategory}</Typography>
-                          <Typography variant="body2" align="center">ABV: {item.custom.abv}%</Typography>
-                          <Typography variant="body2" align="center">Vol: {item.custom.volume_ml}ml</Typography>
+                          <TextField
+                            label="Custom Name"
+                            value={editCustomName}
+                            onChange={e => setEditCustomName(e.target.value)}
+                            size="small"
+                            fullWidth
+                            sx={{ mb: 1 }}
+                          />
+                          <TextField
+                            label="Volume (ml)"
+                            type="number"
+                            value={editVolume}
+                            onChange={e => setEditVolume(Number(e.target.value))}
+                            size="small"
+                            fullWidth
+                            sx={{ mb: 1 }}
+                            inputProps={{ min: 0 }}
+                          />
+                          <TextField
+                            label="Notes"
+                            value={editNotes}
+                            onChange={e => setEditNotes(e.target.value)}
+                            size="small"
+                            fullWidth
+                            sx={{ mb: 1 }}
+                          />
+                          <CardActions>
+                            <Button onClick={() => handleEditSave(item.id)} variant="contained" size="small" sx={{ mr: 1 }}>Save</Button>
+                            <Button onClick={handleEditCancel} variant="outlined" size="small">Cancel</Button>
+                          </CardActions>
                         </>
                       ) : (
                         <>
-                          <Typography variant="body2" color="text.secondary" align="center">{item.meta?.brand}</Typography>
-                          <Typography variant="body2" align="center">{item.meta?.category}{item.meta?.subcategory ? ` (${item.meta.subcategory})` : ''}</Typography>
-                          <Typography variant="body2" align="center">ABV: {item.meta?.abv}%</Typography>
-                          <Typography variant="body2" align="center">Vol: {item.current_volume_ml}ml</Typography>
+                          <Typography variant="subtitle1" fontWeight={600} align="center">
+                            {item.custom ? item.custom.name : (item.custom_name || item.meta?.name)}
+                          </Typography>
+                          {item.custom ? (
+                            <>
+                              <Typography variant="body2" color="text.secondary" align="center">Custom Bottle</Typography>
+                              <Typography variant="body2" align="center">{item.custom.subcategory}</Typography>
+                              <Typography variant="body2" align="center">ABV: {item.custom.abv}%</Typography>
+                              <Typography variant="body2" align="center">Vol: {item.custom.volume_ml}ml</Typography>
+                            </>
+                          ) : (
+                            <>
+                              <Typography variant="body2" color="text.secondary" align="center">{item.meta?.brand}</Typography>
+                              <Typography variant="body2" align="center">{item.meta?.category}{item.meta?.subcategory ? ` (${item.meta.subcategory})` : ''}</Typography>
+                              <Typography variant="body2" align="center">ABV: {item.meta?.abv}%</Typography>
+                              <Typography variant="body2" align="center">Vol: {item.current_volume_ml}ml</Typography>
+                            </>
+                          )}
+                          {item.notes && <Typography variant="caption" color="text.secondary" display="block">Notes: {item.notes}</Typography>}
+                          <Typography variant="caption" color="text.disabled" display="block" align="center">Added: {new Date(item.added_at).toLocaleString()}</Typography>
+                          <CardActions sx={{ justifyContent: 'center', mt: 1 }}>
+                            <Button onClick={() => startEdit(item)} size="small" variant="outlined">Edit</Button>
+                            <Button onClick={() => handleRemoveFromShelf(item.id)} size="small" color="error" variant="outlined">Remove</Button>
+                          </CardActions>
                         </>
                       )}
-                      {item.notes && <Typography variant="caption" color="text.secondary" display="block">Notes: {item.notes}</Typography>}
-                      <Typography variant="caption" color="text.disabled" display="block" align="center">Added: {new Date(item.added_at).toLocaleString()}</Typography>
-                      <CardActions sx={{ justifyContent: 'center', mt: 1 }}>
-                        <Button onClick={() => startEdit(item)} size="small" variant="outlined">Edit</Button>
-                        <Button onClick={() => handleRemoveFromShelf(item.id)} size="small" color="error" variant="outlined">Remove</Button>
-                      </CardActions>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-          {filteredShelf.length === 0 && <Typography color="text.secondary">No bottles found for selected filters.</Typography>}
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+              {filteredShelf.length === 0 && <Typography color="text.secondary">No bottles found for selected filters.</Typography>}
+            </>
+          )}
         </div>
       </Container>
     </ThemeProvider>
