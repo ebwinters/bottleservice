@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import bottleLogo from './assets/bottle_logo.jpg';
 import { createClient, type Session } from "@supabase/supabase-js";
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
@@ -153,7 +154,8 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Container maxWidth="sm">
-          <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+            <img src={bottleLogo} alt="Bottleservice Logo" style={{ width: 90, height: 90, borderRadius: 16, marginBottom: 24, boxShadow: '0 2px 12px #0002' }} />
             <Auth
               supabaseClient={supabase}
               providers={["github"]}
@@ -191,11 +193,11 @@ function App() {
       <AppBar position="static" color="primary" elevation={1}>
         <Toolbar>
           <img
-            src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/2761b822-ae88-48f9-a09b-49eb40261a50/d6p1u28-6ada434d-15c1-4c67-a52e-81a504637a5b.png/v1/fill/w_1024,h_1024/cartoon_martini_by_deathbycartoon_d6p1u28-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTAyNCIsInBhdGgiOiJcL2ZcLzI3NjFiODIyLWFlODgtNDhmOS1hMDliLTQ5ZWI0MDI2MWE1MFwvZDZwMXUyOC02YWRhNDM0ZC0xNWMxLTRjNjctYTUyZS04MWE1MDQ2MzdhNWIucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.WMTSKZ2WFwbV5GlHy1tcGCVHS2WEUiOT3KMmRDHjEjU"
-            alt="Martini"
-            style={{ background: 'white', height: 36, width: 36, borderRadius: 8, marginRight: 16, boxShadow: '0 2px 8px #fff' }}
+            src={bottleLogo}
+            alt="Bottleservice Logo"
+            style={{ background: 'white', height: 40, width: 40, borderRadius: 10, marginRight: 16, boxShadow: '0 2px 8px #fff' }}
           />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, fontFamily: 'Pacifico, cursive', letterSpacing: 1 }}>
             Bottleservice
           </Typography>
           <Button color="inherit" onClick={handleSignOut}>Sign Out</Button>
@@ -216,7 +218,19 @@ function App() {
                 onClick={() => {
                   window.location.href = 'mailto:bottleserviceapp967@gmail.com?subject=Bottle%20Service%20Feedback';
                 }}
-                style={{ marginBottom: 8 }}
+                style={{
+                  marginBottom: 8,
+                  background: '#f0984e',
+                  color: '#fff',
+                  fontWeight: 600,
+                  border: 'none',
+                  boxShadow: '0 2px 8px #0001',
+                  padding: '0.6em 1.2em',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: '1em',
+                  letterSpacing: 0.5,
+                }}
               >
                 Send Feedback
               </button>

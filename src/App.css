@@ -2,4 +2,6 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  background: linear-gradient(120deg, #f5f3ea 0%, #fffbe6 100%);
+  min-height: 100vh;
 }

@@ -4,18 +4,49 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#1976d2',
+      main: '#f0984e', // orange from logo
+      contrastText: '#fff',
     },
     secondary: {
-      main: '#f7a24b',
+      main: '#bfa76f', // gold/bronze
     },
     background: {
-      default: '#f7f7fa',
-      paper: '#fff',
+      default: '#f5f3ea', // light tan
+      paper: '#fffbe6', // off-white with warmth
+    },
+    text: {
+      primary: '#2d2d2d',
+      secondary: '#7a6c4f',
     },
   },
   typography: {
     fontFamily: 'Roboto, Inter, Arial, sans-serif',
+    h6: {
+      fontFamily: 'Pacifico, cursive',
+      fontWeight: 700,
+      letterSpacing: 1,
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 10,
+          textTransform: 'none',
+          fontWeight: 600,
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          background: '#f0984e',
+        },
+      },
+    },
   },
 });
 
