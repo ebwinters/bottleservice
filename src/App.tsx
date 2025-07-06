@@ -215,40 +215,41 @@ function App() {
         >
           🚀 Check out the new Bottleservice MCP Server! Give AI apps context on your bar inventory.
         </a>
-      </Box>
-      <Container maxWidth="md" sx={{ mt: 4 }}>
+      </Box>      <Container maxWidth="md" sx={{ mt: 4 }}>
         {/* Welcome and Feedback Section - Moved Above */}
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           {/* Welcome back message */}
-          {session && (
-            <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
-              Welcome back, {session.user.user_metadata?.full_name || session.user.email}!
-            </div>
-          )}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-            <div>
-              <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2 }}>Can't find a bottle?</div>
-              <button
-                onClick={() => {
-                  window.location.href = 'mailto:bottleserviceapp967@gmail.com?subject=Bottle%20Service%20Feedback';
-                }}
-                style={{
-                  marginBottom: 8,
-                  background: '#f0984e',
-                  color: '#fff',
-                  fontWeight: 600,
-                  border: 'none',
-                  boxShadow: '0 2px 8px #0001',
-                  padding: '0.6em 1.2em',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: '1em',
-                  letterSpacing: 0.5,
-                }}
-              >
-                Send Feedback
-              </button>
-            </div>
+          <div>
+            {session && (
+              <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+                Welcome back, {session.user.user_metadata?.full_name || session.user.email}!
+              </div>
+            )}
+          </div>
+          
+          {/* Feedback section - moved to top right */}
+          <div>
+            <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2, textAlign: 'right' }}>Can't find a bottle?</div>
+            <button
+              onClick={() => {
+                window.location.href = 'mailto:bottleserviceapp967@gmail.com?subject=Bottle%20Service%20Feedback';
+              }}
+              style={{
+                marginBottom: 8,
+                background: '#f0984e',
+                color: '#fff',
+                fontWeight: 600,
+                border: 'none',
+                boxShadow: '0 2px 8px #0001',
+                padding: '0.6em 1.2em',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: '1em',
+                letterSpacing: 0.5,
+              }}
+            >
+              Send Feedback
+            </button>
           </div>
         </div>
         
