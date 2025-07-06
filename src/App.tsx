@@ -203,7 +203,33 @@ function App() {
           <Button color="inherit" onClick={handleSignOut}>Sign Out</Button>
         </Toolbar>
       </AppBar>
+      {/* MCP Server Banner */}
+      <Box sx={{ width: '100%', bgcolor: '#222', color: '#fff', py: 1, px: 2, textAlign: 'center', fontWeight: 600, letterSpacing: 0.5 }}>
+        <a
+          href="https://github.com/ebwinters/bottleservice-mcp"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#f0984e', textDecoration: 'underline', fontWeight: 700 }}
+        >
+          🚀 Check out the new Bottleservice MCP Server! Give AI apps context on your bar inventory.
+        </a>
+      </Box>
       <Container maxWidth="md" sx={{ mt: 4 }}>
+        {/* SEO Content Section */}
+        <Box sx={{ bgcolor: '#fffbe7', border: '1px solid #ffe0b2', borderRadius: 2, p: 3, mb: 4, boxShadow: 1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+            How to Track Your Home Bar Inventory
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Bottleservice makes it easy to manage your home bar. Add bottles, track what you have, and never run out of your favorite spirits. Whether you’re a cocktail enthusiast or a home bartender, keeping your bar organized helps you mix drinks with confidence.
+          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>
+            Best Apps for Home Bartenders
+          </Typography>
+          <Typography variant="body2">
+            Looking for the best way to manage your bar? Bottleservice is designed for home bartenders who want to track inventory, discover new bottles, and get the most out of their collection. Try it today and see why it’s a top choice for home bar management!
+          </Typography>
+        </Box>
         <div style={{ margin: '2rem auto' }}>
           {/* Welcome back message */}
           {session && (
