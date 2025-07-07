@@ -21,12 +21,11 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
   const handleToggleChat = () => {
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
-    
-    // Show welcome message when opening chat for the first time
+      // Show welcome message when opening chat for the first time
     if (newIsOpen && messages.length === 0) {
       const welcomeMessage: ChatMessage = {
         id: Date.now().toString(),
-        text: "👋 Hi there! I'm your Bar Cart Assistant. Ask me about cocktails you can make with your current inventory, or get recommendations based on spirits and flavors you enjoy!",
+        text: "👋 Hi there! I'm your AI-powered Bar Cart Assistant. Ask me about cocktails you can make with your current inventory, or get recommendations based on spirits and flavors you enjoy!",
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -92,10 +91,9 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
   }, [messages]);
-
   return (
-    <Box sx={{ position: 'fixed', bottom: 0, right: 20, zIndex: 1000 }}>
-      {isOpen ? (        <Paper
+    <Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
+      {isOpen ? (<Paper
           elevation={3}
           sx={{
             width: { xs: '90vw', sm: 450 },
@@ -116,9 +114,8 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-              Bar Cart Assistant
+          >            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+              <span style={{ marginRight: '6px' }}>🤖</span> AI Bar Cart Assistant
             </Typography>
             <Box>
               <IconButton size="small" onClick={handleToggleChat} sx={{ color: 'white' }}>
@@ -225,24 +222,41 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
               }}
             />
           </Box>
-        </Paper>
-      ) : (
-        <IconButton
-          color="primary"
-          onClick={handleToggleChat}
-          sx={{
-            width: 56,
-            height: 56,
-            bgcolor: 'primary.main',
-            color: 'white',
-            boxShadow: 3,
-            '&:hover': {
-              bgcolor: 'primary.dark',
-            },
-          }}
-        >
-          <ChatIcon />
-        </IconButton>
+        </Paper>      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Paper 
+            sx={{ 
+              mb: 1, 
+              px: 2, 
+              py: 0.5, 
+              bgcolor: 'primary.main', 
+              color: 'white',
+              borderRadius: 5,
+              boxShadow: 1,
+              typography: 'caption',
+              fontWeight: 'medium'
+            }}
+          >
+            AI Bartender
+          </Paper>
+          <IconButton
+            color="primary"
+            onClick={handleToggleChat}
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: 'primary.main',
+              color: 'white',
+              boxShadow: 3,
+              '&:hover': {
+                bgcolor: 'primary.dark',
+              },
+            }}
+            aria-label="Open AI Chat"
+          >
+            <ChatIcon />
+          </IconButton>
+        </Box>
       )}
     </Box>
   );
