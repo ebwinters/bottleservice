@@ -15,12 +15,14 @@ export async function getAIResponse(question: string, bottles: BottleForAI[]): P
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Invoke the Supabase function
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const { data, error } = await supabase.functions.invoke('ai-query', {
-      body: {
-        question,
-        bottles
-      }
+        body: { question, bottles },
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
     });
     
     if (error) {
