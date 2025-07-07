@@ -31,6 +31,9 @@ function App() {
   const [addCost, setAddCost] = useState<number>(0);
   const [editCost, setEditCost] = useState<string>('');
 
+  const [addQuantity, setAddQuantity] = useState<number>(1);
+  const [editQuantity, setEditQuantity] = useState<number>(1);
+
   // Fetch session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -130,9 +133,10 @@ function App() {
         notes: addNotes,
         current_volume_ml: addVolume,
         cost: addCost,
+        quantity: addQuantity,
       },
     ]);
-    setAddBottleId(''); setAddCustomName(''); setAddNotes(''); setAddVolume(750); setAddCost(0);
+    setAddBottleId(''); setAddCustomName(''); setAddNotes(''); setAddVolume(750); setAddCost(0); setAddQuantity(1);
     getUserShelf(session.user.id);
   }
   async function handleRemoveFromShelf(id: string) {
@@ -146,6 +150,7 @@ function App() {
     setEditNotes(item.notes);
     setEditVolume(item.current_volume_ml);
     setEditCost(item.cost !== undefined && item.cost !== null && item.cost !== 0 ? String(item.cost) : '');
+    setEditQuantity(item.quantity !== undefined && item.quantity !== null ? item.quantity : 1);
   }
   async function handleEditSave(id: string) {
     if (!session) return;
@@ -154,6 +159,7 @@ function App() {
       notes: editNotes,
       current_volume_ml: editVolume,
       cost: editCost === '' ? 0 : Number(editCost),
+      quantity: editQuantity,
     }).eq('id', id);
     setEditId(null);
     getUserShelf(session.user.id);
@@ -379,6 +385,16 @@ function App() {
                         sx={{ minWidth: 100 }}
                         inputProps={{ min: 0, step: 0.01 }}
                       />
+                      <TextField
+                        label="Quantity"
+                        type="number"
+                        value={addQuantity}
+                        onChange={e => setAddQuantity(Number(e.target.value))}
+                        size="small"
+                        required
+                        sx={{ minWidth: 100 }}
+                        inputProps={{ min: 1 }}
+                      />
                       <Button variant="contained" onClick={async () => {
                         if (!session) return;
                         // Create the custom bottle
@@ -390,6 +406,7 @@ function App() {
                             abv: addABV,
                             volume_ml: addVolume,
                             cost: addCost,
+                            quantity: addQuantity,
                           }
                         ]).select();
                         if (status === 201 && data && data[0]) {
@@ -403,6 +420,7 @@ function App() {
                               notes: '',
                               current_volume_ml: customBottle.volume_ml,
                               cost: addCost,
+                              quantity: addQuantity,
                             }
                           ]);
                           getCustomBottles(session.user.id);
@@ -412,6 +430,7 @@ function App() {
                           setAddVolume(750);
                           setAddABV(40);
                           setAddCost(0);
+                          setAddQuantity(1);
                         } else {
                           alert('Failed to add custom bottle');
                         }
@@ -465,6 +484,25 @@ function App() {
                           required
                         />
                       )}
+                      <TextField
+                        label="Cost ($)"
+                        type="number"
+                        value={addCost}
+                        onChange={e => setAddCost(Number(e.target.value))}
+                        size="small"
+                        sx={{ width: 100 }}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                      <TextField
+                        label="Quantity"
+                        type="number"
+                        value={addQuantity}
+                        onChange={e => setAddQuantity(Number(e.target.value))}
+                        size="small"
+                        sx={{ width: 100 }}
+                        inputProps={{ min: 1 }}
+                        required
+                      />
                       <TextField
                         label="Notes"
                         value={addNotes}
@@ -582,6 +620,17 @@ function App() {
                             sx={{ mb: 1 }}
                             inputProps={{ min: 0, step: 0.01 }}
                           />
+                          <TextField
+                            label="Quantity"
+                            type="number"
+                            value={editQuantity}
+                            onChange={e => setEditQuantity(Number(e.target.value))}
+                            size="small"
+                            fullWidth
+                            sx={{ mb: 1 }}
+                            inputProps={{ min: 1 }}
+                            required
+                          />
                           <CardActions>
                             <Button onClick={() => handleEditSave(item.id)} variant="contained" size="small" sx={{ mr: 1 }}>Save</Button>
                             <Button onClick={handleEditCancel} variant="outlined" size="small">Cancel</Button>
@@ -599,6 +648,7 @@ function App() {
                               <Typography variant="body2" align="center">ABV: {item.custom.abv}%</Typography>
                               <Typography variant="body2" align="center">Vol: {item.custom.volume_ml}ml</Typography>
                               <Typography variant="body2" align="center">Cost: ${typeof item.cost === 'number' ? item.cost.toFixed(2) : (item.custom.cost ? item.custom.cost.toFixed(2) : '0.00')}</Typography>
+                              <Typography variant="body2" align="center">Qty: {item.quantity ?? 1}</Typography>
                             </>
                           ) : (
                             <>
@@ -607,6 +657,7 @@ function App() {
                               <Typography variant="body2" align="center">ABV: {item.meta?.abv}%</Typography>
                               <Typography variant="body2" align="center">Vol: {item.current_volume_ml}ml</Typography>
                               <Typography variant="body2" align="center">Cost: ${typeof item.cost === 'number' ? item.cost.toFixed(2) : '0.00'}</Typography>
+                              <Typography variant="body2" align="center">Qty: {item.quantity ?? 1}</Typography>
                             </>
                           )}
                           {item.notes && <Typography variant="caption" color="text.secondary" display="block">Notes: {item.notes}</Typography>}

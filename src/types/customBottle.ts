@@ -6,5 +6,6 @@ export type CustomBottle = {
   abv: number;
   volume_ml: number;
   cost: number;
+  quantity: number;
   created_at: string;
 };

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 export interface BottleForAI {
   name: string;
   category: string;
+  cost: number;
 }
 
 // Regular non-streaming response
@@ -18,8 +19,14 @@ export async function getAIResponse(question: string, bottles: BottleForAI[]): P
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
 
+    // Only send name and cost (omit cost if 0)
+    const bottlesForAI = bottles.map(({ name, category, cost }) =>
+      cost && cost !== 0 ? { name, category, cost } : { name, category }
+    );
+
+    console.log("Calling Supabase AI function with question:", question, "and bottles:", bottlesForAI)
     const { data, error } = await supabase.functions.invoke('ai-query', {
-        body: { question, bottles },
+        body: { question, bottles: bottlesForAI, max_tokens: 1024 },
         headers: {
             Authorization: `Bearer ${token}`
         }

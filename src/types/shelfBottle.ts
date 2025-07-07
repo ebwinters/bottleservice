@@ -7,5 +7,6 @@ export type ShelfBottle = {
   current_volume_ml: number;
   notes: string;
   cost: number;
+  quantity: number;
   added_at: string;
 };
