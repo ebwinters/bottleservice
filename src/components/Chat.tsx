@@ -5,7 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import ChatIcon from '@mui/icons-material/Chat';
 import type { ChatMessage } from '../types/chatMessage';
-import { getAIResponse } from '../utils/openai';
+import { getAIResponse, getAIResponseWithStreaming } from '../utils/openai';
 import type { BottleForAI } from '../utils/openai';
 import ReactMarkdown from 'react-markdown';
 
@@ -35,8 +35,7 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
-  };
-  const handleSendMessage = async () => {
+  };  const handleSendMessage = async () => {
     if (input.trim() === '') return;
 
     // Add user message
@@ -52,17 +51,46 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
     setIsLoading(true);
 
     try {
-      // Get response from OpenAI
-      const aiResponse = await getAIResponse(input, bottles);
-      
+      // Create bot message with streaming flag
+      const botMessageId = (Date.now() + 1).toString();
       const botMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: aiResponse || "Sorry, I can't answer that yet.",
+        id: botMessageId,
+        text: '',
         sender: 'bot',
         timestamp: new Date(),
+        isStreaming: true,
+        fullText: ''
       };
       
+      // Add empty bot message that will be updated
       setMessages((prev) => [...prev, botMessage]);
+      
+      // Use streaming API
+      await getAIResponseWithStreaming(
+        input, 
+        bottles,
+        // On chunk received
+        (chunk: string) => {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === botMessageId 
+                ? { ...msg, text: chunk } 
+                : msg
+            )
+          );
+        },
+        // On completion
+        (fullText: string) => {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === botMessageId 
+                ? { ...msg, isStreaming: false, fullText, text: fullText } 
+                : msg
+            )
+          );
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.error("Error getting AI response:", error);
       
@@ -72,10 +100,10 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
         text: "Sorry, I can't answer that yet.",
         sender: 'bot',
         timestamp: new Date(),
+        isStreaming: false
       };
       
       setMessages((prev) => [...prev, botMessage]);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -164,6 +192,7 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
                   >
                     {message.sender === 'bot' ? (                      <Box sx={{ 
                         typography: 'body2',
+                        position: 'relative',
                         '& strong, & b': { fontWeight: 'bold' },
                         '& ul, & ol': { pl: 2, mb: 1 },
                         '& li': { mb: 0.5 },
@@ -187,6 +216,27 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
                         '& em': { fontStyle: 'italic' }
                       }}>
                         <ReactMarkdown>{message.text}</ReactMarkdown>
+                        {message.isStreaming && (
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'inline-block',
+                              width: '0.5em',
+                              height: '1.2em',
+                              backgroundColor: 'primary.main',
+                              ml: 0.5,
+                              animation: 'blink 1s step-end infinite',
+                              '@keyframes blink': {
+                                '0%, 100%': {
+                                  opacity: 0,
+                                },
+                                '50%': {
+                                  opacity: 1,
+                                },
+                              },
+                            }}
+                          />
+                        )}
                       </Box>
                     ) : (
                       <Typography variant="body2">{message.text}</Typography>

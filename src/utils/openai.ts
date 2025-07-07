@@ -5,6 +5,7 @@ export interface BottleForAI {
   category: string;
 }
 
+// Regular non-streaming response
 export async function getAIResponse(question: string, bottles: BottleForAI[]): Promise<string> {
   try {
     // Create Supabase client
@@ -31,5 +32,42 @@ export async function getAIResponse(question: string, bottles: BottleForAI[]): P
   } catch (error) {
     console.error("Error calling Supabase AI function:", error);
     return "I'm sorry, I couldn't process your request at this moment. Please try again later.";
+  }
+}
+
+// New streaming implementation (simulated since we don't have actual streaming API)
+export async function getAIResponseWithStreaming(
+  question: string, 
+  bottles: BottleForAI[], 
+  onChunk: (chunk: string) => void,
+  onDone: (fullText: string) => void
+): Promise<void> {
+  try {
+    // First get the full response
+    const fullResponse = await getAIResponse(question, bottles);
+    
+    // Simulate streaming by sending chunks of text with delays
+    let displayedText = '';
+    const words = fullResponse.split(' ');
+    
+    // Process words with a small delay to simulate typing
+    for (let i = 0; i < words.length; i++) {
+      // Add the next word
+      displayedText += (i > 0 ? ' ' : '') + words[i];
+      
+      // Call the chunk handler
+      onChunk(displayedText);
+      
+      // Delay before the next word (adjust for desired typing speed)
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    // Signal completion
+    onDone(fullResponse);
+  } catch (error) {
+    console.error("Error in streaming AI function:", error);
+    const errorMessage = "I'm sorry, I couldn't process your request at this moment. Please try again later.";
+    onChunk(errorMessage);
+    onDone(errorMessage);
   }
 }
