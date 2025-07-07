@@ -8,6 +8,7 @@ import type { ShelfBottle } from "./types/shelfBottle";
 import type { CustomBottle } from "./types/customBottle";
 import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab } from '@mui/material';
 import theme from './mui-theme';
+import Chat from './components/Chat';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -530,8 +531,17 @@ function App() {
               {filteredShelf.length === 0 && <Typography color="text.secondary">No bottles found for selected filters.</Typography>}
             </>
           )}
-        </div>
-      </Container>
+        </div>      </Container>
+      
+      {/* Chat Component with user's bottle collection */}
+      {session && (
+        <Chat 
+          bottles={shelfWithMeta.map(bottle => ({
+            name: bottle.custom ? bottle.custom.name : (bottle.custom_name || bottle.meta?.name || ''),
+            category: bottle.custom ? bottle.custom.subcategory : (bottle.meta?.category || '')
+          }))}
+        />
+      )}
     </ThemeProvider>
   );
 }
