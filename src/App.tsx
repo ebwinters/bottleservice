@@ -89,11 +89,11 @@ function App() {
     if (bottleSearch) {
       const q = bottleSearch.toLowerCase();
       const name = item.meta?.name?.toLowerCase() || item.custom?.name?.toLowerCase() || '';
-      const customName = item.custom_name?.toLowerCase() || '';
+      // Removed customName from search
       const brand = item.meta?.brand?.toLowerCase() || '';
       const notes = item.notes?.toLowerCase() || '';
       const subcat = item.custom?.subcategory?.toLowerCase() || '';
-      if (!name.includes(q) && !customName.includes(q) && !brand.includes(q) && !notes.includes(q) && !subcat.includes(q)) return false;
+      if (!name.includes(q) && !brand.includes(q) && !notes.includes(q) && !subcat.includes(q)) return false;
     }
     return true;
   });
@@ -119,7 +119,7 @@ function App() {
       {
         user_id: session.user.id,
         bottle_id: addBottleId,
-        custom_name: addCustomName,
+        // custom_name removed
         notes: addNotes,
         current_volume_ml: addVolume,
       },
@@ -134,14 +134,14 @@ function App() {
   }
   function startEdit(item: typeof shelfWithMeta[number]) {
     setEditId(item.id);
-    setEditCustomName(item.custom_name);
+    // setEditCustomName(item.custom_name); // removed
     setEditNotes(item.notes);
     setEditVolume(item.current_volume_ml);
   }
   async function handleEditSave(id: string) {
     if (!session) return;
     await supabase.from('shelf_bottles').update({
-      custom_name: editCustomName,
+      // custom_name: editCustomName, // removed
       notes: editNotes,
       current_volume_ml: editVolume,
     }).eq('id', id);
@@ -349,7 +349,7 @@ function App() {
                             {
                               user_id: session.user.id,
                               bottle_id: customBottle.id,
-                              custom_name: customBottle.name,
+                              // custom_name removed
                               notes: '',
                               current_volume_ml: customBottle.volume_ml,
                             }
@@ -382,12 +382,6 @@ function App() {
                   )}
                   {addBottleType !== 'Custom' && (
                     <>
-                      <TextField
-                        label="Custom Name"
-                        value={addCustomName}
-                        onChange={e => setAddCustomName(e.target.value)}
-                        size="small"
-                      />
                       <TextField
                         label="Volume (ml)"
                         type="number"
@@ -466,14 +460,6 @@ function App() {
                       {editId === item.id ? (
                         <>
                           <TextField
-                            label="Custom Name"
-                            value={editCustomName}
-                            onChange={e => setEditCustomName(e.target.value)}
-                            size="small"
-                            fullWidth
-                            sx={{ mb: 1 }}
-                          />
-                          <TextField
                             label="Volume (ml)"
                             type="number"
                             value={editVolume}
@@ -488,8 +474,6 @@ function App() {
                             value={editNotes}
                             onChange={e => setEditNotes(e.target.value)}
                             size="small"
-                            fullWidth
-                            sx={{ mb: 1 }}
                           />
                           <CardActions>
                             <Button onClick={() => handleEditSave(item.id)} variant="contained" size="small" sx={{ mr: 1 }}>Save</Button>
@@ -499,7 +483,7 @@ function App() {
                       ) : (
                         <>
                           <Typography variant="subtitle1" fontWeight={600} align="center">
-                            {item.custom ? item.custom.name : (item.custom_name || item.meta?.name)}
+                            {item.custom ? item.custom.name : (item.meta?.name)}
                           </Typography>
                           {item.custom ? (
                             <>
@@ -537,7 +521,7 @@ function App() {
       {session && (
         <Chat 
           bottles={shelfWithMeta.map(bottle => ({
-            name: bottle.custom ? bottle.custom.name : (bottle.custom_name || bottle.meta?.name || ''),
+            name: bottle.custom ? bottle.custom.name : (bottle.meta?.name || ''),
             category: bottle.custom ? bottle.custom.subcategory : (bottle.meta?.category || '')
           }))}
         />
