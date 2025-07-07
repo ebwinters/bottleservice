@@ -16,6 +16,7 @@ interface ChatProps {
 const Chat = ({ bottles = [] }: ChatProps) => {    // Cycling placeholder texts
   const placeholderTexts = [
     "Can I make a classic mai tai?",
+    "How much would making an old fashioned with my Makers Mark cost?",
     "Do I have any london dry gins?",
     "What is a good drink I can make for fall weather?",
     "What cocktails can I make with bourbon?",
