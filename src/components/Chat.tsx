@@ -13,11 +13,27 @@ interface ChatProps {
   bottles?: BottleForAI[];
 }
 
-const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = useState(false);
+const Chat = ({ bottles = [] }: ChatProps) => {    // Cycling placeholder texts
+  const placeholderTexts = [
+    "Can I make a classic mai tai?",
+    "Do I have any london dry gins?",
+    "What is a good drink I can make for fall weather?",
+    "What cocktails can I make with bourbon?",
+    "Recommend a refreshing summer drink",
+    "How do I make a perfect Manhattan?",
+    "What's a good non-alcoholic alternative to a mojito?",
+    "What pairs well with mezcal?",
+    "Can you suggest a fancy cocktail for a dinner party?",
+    "What's an easy 3-ingredient cocktail to make?"
+  ];
+
+  const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const messageContainerRef = useRef<HTMLDivElement>(null);
+  const placeholderIntervalRef = useRef<number | null>(null);
   const handleToggleChat = () => {
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
@@ -112,13 +128,31 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
       handleSendMessage();
     }
   };
-
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
   }, [messages]);
+  
+  // Cycle through placeholder texts
+  useEffect(() => {
+    // Only start cycling when chat is open
+    if (isOpen) {
+      // Start the interval to change placeholder text every 5 seconds
+      placeholderIntervalRef.current = window.setInterval(() => {
+        setPlaceholderIndex(prevIndex => (prevIndex + 1) % placeholderTexts.length);
+      }, 5000); // Change every 5 seconds
+    }
+    
+    // Cleanup function to clear the interval when component unmounts or chat closes
+    return () => {
+      if (placeholderIntervalRef.current !== null) {
+        clearInterval(placeholderIntervalRef.current);
+        placeholderIntervalRef.current = null;
+      }
+    };
+  }, [isOpen, placeholderTexts.length]);
   return (
     <Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
       {isOpen ? (<Paper
@@ -251,13 +285,12 @@ const Chat = ({ bottles = [] }: ChatProps) => {  const [isOpen, setIsOpen] = use
           </Box>
 
           {/* Chat Input */}
-          <Box sx={{ p: 1, bgcolor: 'background.paper' }}>            <TextField
-              fullWidth
+          <Box sx={{ p: 1, bgcolor: 'background.paper' }}>            <TextField              fullWidth
               size="small"
-              placeholder="Ask about cocktails you can make..."
+              placeholder={placeholderTexts[placeholderIndex]}
               value={input}
               onChange={handleInputChange}
-              onKeyPress={handleKeyPress}              InputProps={{
+              onKeyPress={handleKeyPress}InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     {isLoading ? (
