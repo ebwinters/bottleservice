@@ -107,7 +107,6 @@ function App() {
   const [addVolume, setAddVolume] = useState<number>(750);
   const [addABV, setAddABV] = useState<number>(40);
   const [editId, setEditId] = useState<string | null>(null);
-  const [editCustomName, setEditCustomName] = useState<string>('');
   const [editNotes, setEditNotes] = useState<string>('');
   const [editVolume, setEditVolume] = useState<number>(750);
 
