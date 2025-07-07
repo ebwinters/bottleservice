@@ -5,5 +5,6 @@ export type CustomBottle = {
   subcategory: string;
   abv: number;
   volume_ml: number;
+  cost: number;
   created_at: string;
 };

@@ -12,6 +12,8 @@ import Chat from './components/Chat';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
+const VOLUME_OPTIONS = [50, 375, 700, 750];
+
 function App() {
   // Collapsible Add Bottle section
   const [showAdd, setShowAdd] = useState<boolean>(true);
@@ -22,6 +24,12 @@ function App() {
   const [filter, setFilter] = useState<{ brand?: string; category?: string }>({});
   // Tab state
   const [activeTab, setActiveTab] = useState<number>(0);
+
+  const [addVolumeOption, setAddVolumeOption] = useState<number|string>(750);
+  const [editVolumeOption, setEditVolumeOption] = useState<number|string>(750);
+
+  const [addCost, setAddCost] = useState<number>(0);
+  const [editCost, setEditCost] = useState<string>('');
 
   // Fetch session
   useEffect(() => {
@@ -121,9 +129,10 @@ function App() {
         // custom_name removed
         notes: addNotes,
         current_volume_ml: addVolume,
+        cost: addCost,
       },
     ]);
-    setAddBottleId(''); setAddCustomName(''); setAddNotes(''); setAddVolume(750);
+    setAddBottleId(''); setAddCustomName(''); setAddNotes(''); setAddVolume(750); setAddCost(0);
     getUserShelf(session.user.id);
   }
   async function handleRemoveFromShelf(id: string) {
@@ -136,6 +145,7 @@ function App() {
     // setEditCustomName(item.custom_name); // removed
     setEditNotes(item.notes);
     setEditVolume(item.current_volume_ml);
+    setEditCost(item.cost !== undefined && item.cost !== null && item.cost !== 0 ? String(item.cost) : '');
   }
   async function handleEditSave(id: string) {
     if (!session) return;
@@ -143,6 +153,7 @@ function App() {
       // custom_name: editCustomName, // removed
       notes: editNotes,
       current_volume_ml: editVolume,
+      cost: editCost === '' ? 0 : Number(editCost),
     }).eq('id', id);
     setEditId(null);
     getUserShelf(session.user.id);
@@ -328,7 +339,46 @@ function App() {
                       <TextField label="Name" value={addCustomName} onChange={e => setAddCustomName(e.target.value)} size="small" required />
                       <TextField label="Subcategory" value={addNotes} onChange={e => setAddNotes(e.target.value)} size="small" required />
                       <TextField label="ABV (%)" type="number" value={addABV} onChange={e => setAddABV(Number(e.target.value))} size="small" required />
-                      <TextField label="Volume (ml)" type="number" value={addVolume} onChange={e => setAddVolume(Number(e.target.value))} size="small" required />
+                      <FormControl size="small" required>
+                        <InputLabel>Volume (ml)</InputLabel>
+                        <Select
+                          value={addVolumeOption}
+                          label="Volume (ml)"
+                          onChange={e => {
+                            const val = e.target.value;
+                            setAddVolumeOption(val);
+                            if (val !== 'custom') setAddVolume(Number(val));
+                            else setAddVolume(0);
+                          }}
+                          sx={{ minWidth: 100 }}
+                        >
+                          {VOLUME_OPTIONS.map(opt => (
+                            <MenuItem key={opt} value={opt}>{opt} mL</MenuItem>
+                          ))}
+                          <MenuItem value="custom">Custom...</MenuItem>
+                        </Select>
+                      </FormControl>
+                      {addVolumeOption === 'custom' && (
+                        <TextField
+                          label="Custom Volume (ml)"
+                          type="number"
+                          value={addVolume || ''}
+                          onChange={e => setAddVolume(Number(e.target.value))}
+                          size="small"
+                          required
+                          sx={{ minWidth: 100 }}
+                          inputProps={{ min: 1 }}
+                        />
+                      )}
+                      <TextField
+                        label="Cost ($)"
+                        type="number"
+                        value={addCost}
+                        onChange={e => setAddCost(Number(e.target.value))}
+                        size="small"
+                        sx={{ minWidth: 100 }}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
                       <Button variant="contained" onClick={async () => {
                         if (!session) return;
                         // Create the custom bottle
@@ -339,6 +389,7 @@ function App() {
                             subcategory: addNotes,
                             abv: addABV,
                             volume_ml: addVolume,
+                            cost: addCost,
                           }
                         ]).select();
                         if (status === 201 && data && data[0]) {
@@ -351,6 +402,7 @@ function App() {
                               // custom_name removed
                               notes: '',
                               current_volume_ml: customBottle.volume_ml,
+                              cost: addCost,
                             }
                           ]);
                           getCustomBottles(session.user.id);
@@ -359,6 +411,7 @@ function App() {
                           setAddNotes('');
                           setAddVolume(750);
                           setAddABV(40);
+                          setAddCost(0);
                         } else {
                           alert('Failed to add custom bottle');
                         }
@@ -381,15 +434,37 @@ function App() {
                   )}
                   {addBottleType !== 'Custom' && (
                     <>
-                      <TextField
-                        label="Volume (ml)"
-                        type="number"
-                        value={addVolume}
-                        onChange={e => setAddVolume(Number(e.target.value))}
-                        size="small"
-                        sx={{ width: 100 }}
-                        inputProps={{ min: 0 }}
-                      />
+                      <FormControl size="small">
+                        <InputLabel>Volume (ml)</InputLabel>
+                        <Select
+                          value={addVolumeOption}
+                          label="Volume (ml)"
+                          onChange={e => {
+                            const val = e.target.value;
+                            setAddVolumeOption(val);
+                            if (val !== 'custom') setAddVolume(Number(val));
+                            else setAddVolume(0);
+                          }}
+                          sx={{ width: 100 }}
+                        >
+                          {VOLUME_OPTIONS.map(opt => (
+                            <MenuItem key={opt} value={opt}>{opt} mL</MenuItem>
+                          ))}
+                          <MenuItem value="custom">Custom...</MenuItem>
+                        </Select>
+                      </FormControl>
+                      {addVolumeOption === 'custom' && (
+                        <TextField
+                          label="Custom Volume (ml)"
+                          type="number"
+                          value={addVolume || ''}
+                          onChange={e => setAddVolume(Number(e.target.value))}
+                          size="small"
+                          sx={{ width: 100 }}
+                          inputProps={{ min: 1 }}
+                          required
+                        />
+                      )}
                       <TextField
                         label="Notes"
                         value={addNotes}
@@ -458,21 +533,54 @@ function App() {
                     <CardContent>
                       {editId === item.id ? (
                         <>
-                          <TextField
-                            label="Volume (ml)"
-                            type="number"
-                            value={editVolume}
-                            onChange={e => setEditVolume(Number(e.target.value))}
-                            size="small"
-                            fullWidth
-                            sx={{ mb: 1 }}
-                            inputProps={{ min: 0 }}
-                          />
+                          <FormControl size="small" fullWidth sx={{ mb: 1 }}>
+                            <InputLabel>Volume (ml)</InputLabel>
+                            <Select
+                              value={editVolumeOption}
+                              label="Volume (ml)"
+                              onChange={e => {
+                                const val = e.target.value;
+                                setEditVolumeOption(val);
+                                if (val !== 'custom') setEditVolume(Number(val));
+                                else setEditVolume(0);
+                              }}
+                            >
+                              {VOLUME_OPTIONS.map(opt => (
+                                <MenuItem key={opt} value={opt}>{opt} mL</MenuItem>
+                              ))}
+                              <MenuItem value="custom">Custom...</MenuItem>
+                            </Select>
+                          </FormControl>
+                          {editVolumeOption === 'custom' && (
+                            <TextField
+                              label="Custom Volume (ml)"
+                              type="number"
+                              value={editVolume || ''}
+                              onChange={e => setEditVolume(Number(e.target.value))}
+                              size="small"
+                              fullWidth
+                              sx={{ mb: 1 }}
+                              inputProps={{ min: 1 }}
+                              required
+                            />
+                          )}
                           <TextField
                             label="Notes"
                             value={editNotes}
                             onChange={e => setEditNotes(e.target.value)}
                             size="small"
+                            fullWidth
+                            sx={{ mb: 1 }}
+                          />
+                          <TextField
+                            label="Cost ($)"
+                            type="number"
+                            value={editCost}
+                            onChange={e => setEditCost(e.target.value.replace(/^0+(?=\d)/, ''))}
+                            size="small"
+                            fullWidth
+                            sx={{ mb: 1 }}
+                            inputProps={{ min: 0, step: 0.01 }}
                           />
                           <CardActions>
                             <Button onClick={() => handleEditSave(item.id)} variant="contained" size="small" sx={{ mr: 1 }}>Save</Button>
@@ -490,6 +598,7 @@ function App() {
                               <Typography variant="body2" align="center">{item.custom.subcategory}</Typography>
                               <Typography variant="body2" align="center">ABV: {item.custom.abv}%</Typography>
                               <Typography variant="body2" align="center">Vol: {item.custom.volume_ml}ml</Typography>
+                              <Typography variant="body2" align="center">Cost: ${typeof item.cost === 'number' ? item.cost.toFixed(2) : (item.custom.cost ? item.custom.cost.toFixed(2) : '0.00')}</Typography>
                             </>
                           ) : (
                             <>
@@ -497,6 +606,7 @@ function App() {
                               <Typography variant="body2" align="center">{item.meta?.category}{item.meta?.subcategory ? ` (${item.meta.subcategory})` : ''}</Typography>
                               <Typography variant="body2" align="center">ABV: {item.meta?.abv}%</Typography>
                               <Typography variant="body2" align="center">Vol: {item.current_volume_ml}ml</Typography>
+                              <Typography variant="body2" align="center">Cost: ${typeof item.cost === 'number' ? item.cost.toFixed(2) : '0.00'}</Typography>
                             </>
                           )}
                           {item.notes && <Typography variant="caption" color="text.secondary" display="block">Notes: {item.notes}</Typography>}
@@ -521,7 +631,8 @@ function App() {
         <Chat 
           bottles={shelfWithMeta.map(bottle => ({
             name: bottle.custom ? bottle.custom.name : (bottle.meta?.name || ''),
-            category: bottle.custom ? bottle.custom.subcategory : (bottle.meta?.category || '')
+            category: bottle.custom ? bottle.custom.subcategory : (bottle.meta?.category || ''),
+            cost: bottle.custom ? bottle.custom.cost : (bottle.cost || 0),
           }))}
         />
       )}
