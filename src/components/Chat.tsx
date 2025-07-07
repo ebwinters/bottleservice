@@ -5,7 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import ChatIcon from '@mui/icons-material/Chat';
 import type { ChatMessage } from '../types/chatMessage';
-import { getAIResponse, getAIResponseWithStreaming } from '../utils/openai';
+import { getAIResponseWithStreaming } from '../utils/openai';
 import type { BottleForAI } from '../utils/openai';
 import ReactMarkdown from 'react-markdown';
 
