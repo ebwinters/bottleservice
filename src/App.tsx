@@ -78,7 +78,7 @@ function App() {
     } else {
       setSettings({ icon_url: '', custom_name: '' });
     }
-  }, [session]);
+  }, [session, settings]);
 
   // Fetch all bottles, user shelf, and custom bottles
   useEffect(() => {
