@@ -6,7 +6,9 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Bottle } from "./types/bottle";
 import type { ShelfBottle } from "./types/shelfBottle";
 import type { CustomBottle } from "./types/customBottle";
-import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab } from '@mui/material';
+import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab, IconButton, Modal } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import UserSettingsForm from './components/UserSettingsForm';
 import theme from './mui-theme';
 import Chat from './components/Chat';
 import WelcomeSection from './components/WelcomeSection';
@@ -15,9 +17,21 @@ const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env
 
 const VOLUME_OPTIONS = [50, 375, 700, 750];
 
+// User settings type
+interface UserSettings {
+  icon_url: string;
+  custom_name: string;
+}
+
 function App() {
+  // User settings state
+  const [settings, setSettings] = useState<UserSettings>({
+    icon_url: '',
+    custom_name: '',
+  });
   // Collapsible Add Bottle section
   const [showAdd, setShowAdd] = useState<boolean>(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [allBottles, setAllBottles] = useState<Bottle[]>([]);
   const [shelf, setShelf] = useState<ShelfBottle[]>([]);
   const [customBottles, setCustomBottles] = useState<CustomBottle[]>([]);
@@ -26,8 +40,8 @@ function App() {
   // Tab state
   const [activeTab, setActiveTab] = useState<number>(0);
 
-  const [addVolumeOption, setAddVolumeOption] = useState<number|string>(750);
-  const [editVolumeOption, setEditVolumeOption] = useState<number|string>(750);
+  const [addVolumeOption, setAddVolumeOption] = useState<number | string>(750);
+  const [editVolumeOption, setEditVolumeOption] = useState<number | string>(750);
 
   const [addCost, setAddCost] = useState<number>(0);
   const [editCost, setEditCost] = useState<string>('');
@@ -47,6 +61,24 @@ function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      supabase
+        .from('user_settings')
+        .select('icon_url, custom_name')
+        .eq('user_id', session.user.id)
+        .single()
+        .then(({ data }) => {
+          setSettings({
+            icon_url: data?.icon_url || '',
+            custom_name: data?.custom_name || '',
+          });
+        });
+    } else {
+      setSettings({ icon_url: '', custom_name: '' });
+    }
+  }, [session]);
 
   // Fetch all bottles, user shelf, and custom bottles
   useEffect(() => {
@@ -147,7 +179,6 @@ function App() {
   }
   function startEdit(item: typeof shelfWithMeta[number]) {
     setEditId(item.id);
-    // setEditCustomName(item.custom_name); // removed
     setEditNotes(item.notes);
     setEditVolume(item.current_volume_ml);
     setEditCost(item.cost !== undefined && item.cost !== null && item.cost !== 0 ? String(item.cost) : '');
@@ -156,7 +187,6 @@ function App() {
   async function handleEditSave(id: string) {
     if (!session) return;
     await supabase.from('shelf_bottles').update({
-      // custom_name: editCustomName, // removed
       notes: editNotes,
       current_volume_ml: editVolume,
       cost: editCost === '' ? 0 : Number(editCost),
@@ -175,7 +205,7 @@ function App() {
         <CssBaseline />
         <Container maxWidth="sm">
           <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-            <img src={bottleLogo} alt="Bottleservice Logo" style={{ width: 90, height: 90, borderRadius: 16, marginBottom: 24, boxShadow: '0 2px 12px #0002' }} />
+            <img src={settings.icon_url || bottleLogo} alt="Bottleservice Logo" style={{ width: 90, height: 90, borderRadius: 16, marginBottom: 24, boxShadow: '0 2px 12px #0002' }} />
             <Auth
               supabaseClient={supabase}
               providers={["github"]}
@@ -213,16 +243,53 @@ function App() {
       <AppBar position="static" color="primary" elevation={1}>
         <Toolbar>
           <img
-            src={bottleLogo}
+            src={settings.icon_url || bottleLogo}
             alt="Bottleservice Logo"
             style={{ background: 'white', height: 40, width: 40, borderRadius: 10, marginRight: 16, boxShadow: '0 2px 8px #fff' }}
           />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, fontFamily: 'Pacifico, cursive', letterSpacing: 1 }}>
-            Bottleservice
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: 1 }}>
+            {settings.custom_name || 'Bottleservice'}
           </Typography>
+          <IconButton color="inherit" aria-label="settings" onClick={() => setSettingsOpen(true)} sx={{ mr: 1 }}>
+            <SettingsIcon />
+          </IconButton>
           <Button color="inherit" onClick={handleSignOut}>Sign Out</Button>
         </Toolbar>
       </AppBar>
+      {/* Settings Modal */}
+      <Modal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        aria-labelledby="settings-modal-title"
+        aria-describedby="settings-modal-desc"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 0,
+            minWidth: 340,
+            borderRadius: 2,
+            outline: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          {session?.user?.id && (
+            <UserSettingsForm
+              userId={session.user.id}
+              onClose={() => setSettingsOpen(false)}
+              onIconUrlChange={iconUrl => setSettings(s => ({ ...s, icon_url: iconUrl }))}
+            />
+          )}
+        </Box>
+      </Modal>
       {/* MCP Server Banner */}
       <Box sx={{ width: '100%', bgcolor: '#222', color: '#fff', py: 1, px: 2, textAlign: 'center', fontWeight: 600, letterSpacing: 0.5 }}>
         <a
@@ -237,17 +304,17 @@ function App() {
       <Container maxWidth="md" sx={{ mt: 4 }}>
         {/* Welcome and Feedback Section */}
         <WelcomeSection session={session} />
-        
+
         {/* Tabs */}
         <Box sx={{ width: '100%', mb: 3 }}>
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onChange={(_event, newValue) => setActiveTab(newValue)}
             variant="fullWidth"
             indicatorColor="primary"
             textColor="primary"
-            sx={{ 
-              borderBottom: 1, 
+            sx={{
+              borderBottom: 1,
               borderColor: 'divider',
               '& .MuiTab-root': {
                 fontWeight: 600,
@@ -294,7 +361,7 @@ function App() {
                       onChange={e => { setAddBottleType(e.target.value); setAddBottleId(''); setAddBottleSearch(''); }}
                     >
                       <MenuItem value=""><em>Select type...</em></MenuItem>
-              {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
+                      {categories.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
                     </Select>
                   </FormControl>
                   {/* If type is Custom, show custom bottle form, else show regular bottle autocomplete */}
@@ -510,7 +577,7 @@ function App() {
                   sx={{ minWidth: 220 }}
                 />
               </Box>
-              
+
               {/* Shelf Grid */}
               <Box sx={{
                 display: 'grid',
@@ -637,7 +704,7 @@ function App() {
       </Container>
       {/* Chat Component with user's bottle collection */}
       {session && (
-        <Chat 
+        <Chat
           bottles={shelfWithMeta.map(bottle => ({
             name: bottle.custom ? bottle.custom.name : (bottle.meta?.name || ''),
             category: bottle.custom ? bottle.custom.subcategory : (bottle.meta?.category || ''),
