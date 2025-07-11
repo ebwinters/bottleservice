@@ -9,7 +9,7 @@ import type { CustomBottle } from "./types/customBottle";
 import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab, IconButton, Modal } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import UserSettingsForm from './components/UserSettingsForm';
-import theme from './mui-theme';
+import { getTheme } from './mui-theme';
 import Chat from './components/Chat';
 import WelcomeSection from './components/WelcomeSection';
 
@@ -21,6 +21,8 @@ const VOLUME_OPTIONS = [50, 375, 700, 750];
 interface UserSettings {
   icon_url: string;
   custom_name: string;
+  primary_color: string;
+  secondary_color: string;
 }
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
   const [settings, setSettings] = useState<UserSettings>({
     icon_url: '',
     custom_name: '',
+    primary_color: '',
+    secondary_color: '',
   });
   // Collapsible Add Bottle section
   const [showAdd, setShowAdd] = useState<boolean>(true);
@@ -66,17 +70,19 @@ function App() {
     if (session?.user?.id) {
       supabase
         .from('user_settings')
-        .select('icon_url, custom_name')
+        .select('icon_url, custom_name, primary_color, secondary_color')
         .eq('user_id', session.user.id)
         .single()
         .then(({ data }) => {
           setSettings({
             icon_url: data?.icon_url || '',
             custom_name: data?.custom_name || '',
+            primary_color: data?.primary_color || '',
+            secondary_color: data?.secondary_color || ''
           });
         });
     } else {
-      setSettings({ icon_url: '', custom_name: '' });
+      setSettings({ icon_url: '', custom_name: '', primary_color: '', secondary_color: '' });
     }
   }, [session, settings]);
 
@@ -199,6 +205,8 @@ function App() {
     setEditId(null);
   }
 
+  const theme = getTheme(settings.primary_color, settings.secondary_color);
+
   if (!session) {
     return (
       <ThemeProvider theme={theme}>
@@ -253,7 +261,9 @@ function App() {
           <IconButton color="inherit" aria-label="settings" onClick={() => setSettingsOpen(true)} sx={{ mr: 1 }}>
             <SettingsIcon />
           </IconButton>
-          <Button color="inherit" onClick={handleSignOut}>Sign Out</Button>
+          <Button color="inherit" onClick={handleSignOut} sx={{ bgcolor: settings.secondary_color || '#bfa76f', color: '#fff', ml: 1 }}>
+            Sign Out
+          </Button>
         </Toolbar>
       </AppBar>
       {/* Settings Modal */}
@@ -291,19 +301,19 @@ function App() {
         </Box>
       </Modal>
       {/* MCP Server Banner */}
-      <Box sx={{ width: '100%', bgcolor: '#222', color: '#fff', py: 1, px: 2, textAlign: 'center', fontWeight: 600, letterSpacing: 0.5 }}>
+      <Box sx={{ width: '100%', bgcolor: settings.secondary_color || '#bfa76f', color: '#fff', py: 1, px: 2, textAlign: 'center', fontWeight: 600, letterSpacing: 0.5 }}>
         <a
           href="https://github.com/ebwinters/bottleservice-mcp"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: '#f0984e', textDecoration: 'underline', fontWeight: 700 }}
+          style={{ color: settings.primary_color || '#f0984e', textDecoration: 'underline', fontWeight: 700 }}
         >
           🚀 Check out the new Bottleservice MCP Server! Give AI apps context on your bar inventory.
         </a>
       </Box>
       <Container maxWidth="md" sx={{ mt: 4 }}>
         {/* Welcome and Feedback Section */}
-        <WelcomeSection session={session} />
+        <WelcomeSection session={session} primaryColor={settings.primary_color} />
 
         {/* Tabs */}
         <Box sx={{ width: '100%', mb: 3 }}>
@@ -346,7 +356,7 @@ function App() {
                 sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none', mb: showAdd ? 1 : 0 }}
                 onClick={() => setShowAdd(v => !v)}
               >
-                <Typography variant="h6" color="primary" sx={{ flex: 1 }}>
+                <Typography variant="h6" color="primary" sx={{ flex: 1, color: settings.secondary_color || '#bfa76f' }}>
                   Add Bottle
                 </Typography>
                 <Typography variant="h5" color="primary" sx={{ ml: 1 }}>{showAdd ? '▾' : '▸'}</Typography>
@@ -534,7 +544,7 @@ function App() {
                         onChange={e => setAddNotes(e.target.value)}
                         size="small"
                       />
-                      <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80 }}>Add</Button>
+                      <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80, bgcolor: settings.secondary_color || '#bfa76f', color: '#fff' }}>Add</Button>
                     </>
                   )}
                 </Box>

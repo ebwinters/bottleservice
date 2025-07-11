@@ -43,7 +43,7 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, on
         icon_url: '',
         custom_name: '',
         primary_color: '#222222',
-        secondary_color: '#f0984e',
+        secondary_color: '#f0984e', // This is the default, but you may want to use primary_color here if you want both to match
     });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -57,7 +57,7 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, on
                     icon_url: data.icon_url || '',
                     custom_name: data.custom_name || '',
                     primary_color: data.primary_color || '#222222',
-                    secondary_color: data.secondary_color || '#f0984e',
+                    secondary_color: data.secondary_color || '#f0984e', // Same as above, keep as fallback
                 });
             }
             setLoading(false);
@@ -133,7 +133,7 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, on
                 {loading ? 'Saving...' : 'Save Settings'}
             </Button>
             {success && <Typography color="success.main" align="center">Settings saved!</Typography>}
-            <Button onClick={onClose} color="secondary" sx={{ mt: 1 }}>Cancel</Button>
+            <Button onClick={onClose} color="secondary" sx={{ mt: 1, bgcolor: settings.secondary_color || '#bfa76f', color: '#fff' }}>Cancel</Button>
         </Box>
     );
 };

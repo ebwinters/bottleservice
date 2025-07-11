@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 
-export default function WelcomeSection({ session }: { session: any }) {
+export default function WelcomeSection({ session, primaryColor }: { session: any, primaryColor?: string }) {
   return (
     <>
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -21,7 +21,7 @@ export default function WelcomeSection({ session }: { session: any }) {
             }}
             style={{
               marginBottom: 8,
-              background: '#f0984e',
+              background: primaryColor || '#f0984e',
               color: '#fff',
               fontWeight: 600,
               border: 'none',
@@ -31,6 +31,7 @@ export default function WelcomeSection({ session }: { session: any }) {
               cursor: 'pointer',
               fontSize: '1em',
               letterSpacing: 0.5,
+              outline: `2px solid ${primaryColor || '#bfa76f'}`,
             }}
           >
             Send Feedback
