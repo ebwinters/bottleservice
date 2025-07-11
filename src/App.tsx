@@ -261,7 +261,7 @@ function App() {
           <IconButton color="inherit" aria-label="settings" onClick={() => setSettingsOpen(true)} sx={{ mr: 1 }}>
             <SettingsIcon />
           </IconButton>
-          <Button color="inherit" onClick={handleSignOut} sx={{ bgcolor: settings.secondary_color || '#bfa76f', color: '#fff', ml: 1 }}>
+          <Button color="inherit" onClick={handleSignOut} sx={{ bgcolor: settings.secondary_color || '#2a1707', color: '#fff', ml: 1 }}>
             Sign Out
           </Button>
         </Toolbar>
@@ -301,7 +301,7 @@ function App() {
         </Box>
       </Modal>
       {/* MCP Server Banner */}
-      <Box sx={{ width: '100%', bgcolor: settings.secondary_color || '#bfa76f', color: '#fff', py: 1, px: 2, textAlign: 'center', fontWeight: 600, letterSpacing: 0.5 }}>
+      <Box sx={{ width: '100%', bgcolor: settings.secondary_color || '#2a1707', color: '#fff', py: 1, px: 2, textAlign: 'center', fontWeight: 600, letterSpacing: 0.5 }}>
         <a
           href="https://github.com/ebwinters/bottleservice-mcp"
           target="_blank"
@@ -356,7 +356,7 @@ function App() {
                 sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none', mb: showAdd ? 1 : 0 }}
                 onClick={() => setShowAdd(v => !v)}
               >
-                <Typography variant="h6" color="primary" sx={{ flex: 1, color: settings.secondary_color || '#bfa76f' }}>
+                <Typography variant="h6" color="primary" sx={{ flex: 1, color: settings.secondary_color || '#2a1707' }}>
                   Add Bottle
                 </Typography>
                 <Typography variant="h5" color="primary" sx={{ ml: 1 }}>{showAdd ? '▾' : '▸'}</Typography>
@@ -476,10 +476,20 @@ function App() {
                       options={allBottles.filter(bottle => !addBottleType || bottle.category === addBottleType)}
                       getOptionLabel={option => `${option.name} (${option.brand})`}
                       value={allBottles.find(b => b.id === addBottleId) || null}
-                      onChange={(_e, newValue) => setAddBottleId(newValue ? newValue.id : '')}
+                      onChange={(_e, newValue) => {
+                        if (newValue) {
+                          setAddBottleId(newValue.id);
+                          // If no category is selected, set it based on the selected bottle
+                          if (!addBottleType && newValue.category) {
+                            setAddBottleType(newValue.category);
+                          }
+                        } else {
+                          setAddBottleId('');
+                        }
+                      }}
                       inputValue={addBottleSearch}
                       onInputChange={(_e, newInputValue) => setAddBottleSearch(newInputValue)}
-                      disabled={!addBottleType}
+                      // disabled={!addBottleType}
                       renderInput={params => (
                         <TextField {...params} label="Search & Select Bottle" size="small" sx={{ minWidth: 220 }} required />
                       )}
@@ -544,7 +554,7 @@ function App() {
                         onChange={e => setAddNotes(e.target.value)}
                         size="small"
                       />
-                      <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80, bgcolor: settings.secondary_color || '#bfa76f', color: '#fff' }}>Add</Button>
+                      <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80, bgcolor: settings.secondary_color || '#2a1707', color: '#fff' }}>Add</Button>
                     </>
                   )}
                 </Box>

@@ -9,7 +9,7 @@ export function getTheme(primaryColor?: string, secondaryColor?: string) {
         contrastText: '#fff',
       },
       secondary: {
-        main: secondaryColor || '#bfa76f',
+        main: secondaryColor || '#2a1707',
       },
       background: {
         default: '#f5f3ea',

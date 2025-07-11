@@ -31,7 +31,7 @@ export default function WelcomeSection({ session, primaryColor }: { session: any
               cursor: 'pointer',
               fontSize: '1em',
               letterSpacing: 0.5,
-              outline: `2px solid ${primaryColor || '#bfa76f'}`,
+              outline: `2px solid ${primaryColor || '#2a1707'}`,
             }}
           >
             Send Feedback

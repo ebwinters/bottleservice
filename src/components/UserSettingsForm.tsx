@@ -133,7 +133,7 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, on
                 {loading ? 'Saving...' : 'Save Settings'}
             </Button>
             {success && <Typography color="success.main" align="center">Settings saved!</Typography>}
-            <Button onClick={onClose} color="secondary" sx={{ mt: 1, bgcolor: settings.secondary_color || '#bfa76f', color: '#fff' }}>Cancel</Button>
+            <Button onClick={onClose} color="secondary" sx={{ mt: 1, bgcolor: settings.secondary_color || '#2a1707', color: '#fff' }}>Cancel</Button>
         </Box>
     );
 };
