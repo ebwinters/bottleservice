@@ -6,12 +6,12 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Bottle } from "./types/bottle";
 import type { ShelfBottle } from "./types/shelfBottle";
 import type { CustomBottle } from "./types/customBottle";
-import { ThemeProvider, CssBaseline, Container, AppBar, Toolbar, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab, IconButton, Modal } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { ThemeProvider, CssBaseline, Container, Typography, Button, Box, Card, CardContent, CardActions, TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Tabs, Tab, Modal } from '@mui/material';
 import UserSettingsForm from './components/UserSettingsForm';
 import { getTheme } from './mui-theme';
 import Chat from './components/Chat';
 import WelcomeSection from './components/WelcomeSection';
+import Header from "./components/Header";
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -260,24 +260,14 @@ async function getAllBottles() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static" color="primary" elevation={1}>
-        <Toolbar>
-          <img
-            src={settings.icon_url || bottleLogo}
-            alt="Bottleservice Logo"
-            style={{ background: 'white', height: 40, width: 40, borderRadius: 10, marginRight: 16, boxShadow: '0 2px 8px #fff' }}
-          />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: 1 }}>
-            {settings.custom_name || 'Bottleservice'}
-          </Typography>
-          <IconButton color="inherit" aria-label="settings" onClick={() => setSettingsOpen(true)} sx={{ mr: 1 }}>
-            <SettingsIcon />
-          </IconButton>
-          <Button color="inherit" onClick={handleSignOut} sx={{ bgcolor: settings.secondary_color || '#2a1707', color: '#fff', ml: 1 }}>
-            Sign Out
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <Header
+        logoUrl={settings.icon_url || bottleLogo}
+        barName={settings.custom_name || 'Bottleservice'}
+        onSettingsClick={() => setSettingsOpen(true)}
+        onSignOut={handleSignOut}
+        primaryColor={settings.primary_color}
+        secondaryColor={settings.secondary_color}
+      />
       {/* Settings Modal */}
       <Modal
         open={settingsOpen}
@@ -308,6 +298,7 @@ async function getAllBottles() {
               userId={session.user.id}
               onClose={() => setSettingsOpen(false)}
               onIconUrlChange={iconUrl => setSettings(s => ({ ...s, icon_url: iconUrl }))}
+              onSettingsChange={newSettings => setSettings(newSettings)}
             />
           )}
         </Box>

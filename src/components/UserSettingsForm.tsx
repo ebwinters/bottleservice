@@ -15,6 +15,7 @@ interface UserSettingsFormProps {
     userId: string;
     onClose: () => void;
     onIconUrlChange?: (url: string) => void;
+    onSettingsChange?: (settings: UserSettings) => void;
 }
 
 const fetchUserSettings = async (userId: string) => {
@@ -38,7 +39,7 @@ const upsertUserSettings = async (userId: string, settings: any) => {
     return !error;
 };
 
-const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, onIconUrlChange }) => {
+const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, onIconUrlChange, onSettingsChange }) => {
     const [settings, setSettings] = useState<UserSettings>({
         icon_url: '',
         custom_name: '',
@@ -73,6 +74,9 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ userId, onClose, on
         if (ok) {
             if (typeof onIconUrlChange === 'function') {
                 onIconUrlChange(settings.icon_url);
+            }
+            if (typeof onSettingsChange === 'function') {
+                onSettingsChange(settings);
             }
             setTimeout(onClose, 1000);
         }
