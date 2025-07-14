@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, TextField, Card, CardContent, CardActions, Typography, Button } from '@mui/material';
-import type { Bottle } from '../types/bottle';
-import type { ShelfBottle } from '../types/shelfBottle';
-import type { CustomBottle } from '../types/customBottle';
 
 const VOLUME_OPTIONS = [50, 375, 700, 750];
 
@@ -18,7 +15,7 @@ interface ShelfViewProps {
   onRemove: (id: string) => void;
 }
 
-const ShelfView: React.FC<ShelfViewProps> = ({ shelfWithMeta, categories, brands, settings, onEditSave, onRemove }) => {
+const ShelfView: React.FC<ShelfViewProps> = ({ shelfWithMeta, categories, brands, onEditSave, onRemove }) => {
   const [filter, setFilter] = useState<{ brand?: string; category?: string }>({});
   const [bottleSearch, setBottleSearch] = useState<string>('');
   const [editId, setEditId] = useState<string | null>(null);

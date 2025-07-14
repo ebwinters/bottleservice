@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete } from '@mui/material';
+import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar } from '@mui/material';
 import type { Bottle } from '../types/bottle';
 
 const VOLUME_OPTIONS = [50, 375, 700, 750];
@@ -41,6 +41,8 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
   const [addABV, setAddABV] = useState<number>(40);
   const [addCost, setAddCost] = useState<number>(0);
   const [addQuantity, setAddQuantity] = useState<number>(1);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
   return (
     <Box sx={{
@@ -75,6 +77,8 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
               cost: addCost,
               quantity: addQuantity,
             });
+            setToastMsg(`Successfully added ${addCustomName} to your shelf`);
+            setToastOpen(true);
             setAddCustomName('');
             setAddNotes('');
             setAddVolume(750);
@@ -82,6 +86,7 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
             setAddCost(0);
             setAddQuantity(1);
           } else {
+            const bottle = allBottles.find(b => b.id === addBottleId);
             await onAddToShelf({
               bottleId: addBottleId,
               notes: addNotes,
@@ -89,6 +94,8 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
               cost: addCost,
               quantity: addQuantity,
             });
+            setToastMsg(`Successfully added ${bottle ? bottle.name : 'bottle'} to your shelf`);
+            setToastOpen(true);
             setAddBottleId('');
             setAddNotes('');
             setAddVolume(750);
@@ -249,6 +256,13 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
           )}
         </Box>
       )}
+      <Snackbar
+        open={toastOpen}
+        autoHideDuration={1500}
+        onClose={() => setToastOpen(false)}
+        message={toastMsg}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      />
     </Box>
   );
 };
