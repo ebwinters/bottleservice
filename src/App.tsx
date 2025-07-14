@@ -84,7 +84,7 @@ function App() {
     } else {
       setSettings({ icon_url: '', custom_name: '', primary_color: '', secondary_color: '' });
     }
-  }, [session, settings]);
+  }, [session]);
 
   // Fetch all bottles, user shelf, and custom bottles
   useEffect(() => {
@@ -103,10 +103,22 @@ function App() {
     setCustomBottles((data as CustomBottle[]) || []);
   }
 
-  async function getAllBottles() {
-    const { data } = await supabase.from("bottles").select();
-    setAllBottles((data as Bottle[]) || []);
+// --- Bottle cache ---
+let bottlesCache: Bottle[] | null = null;
+let bottlesCacheTime: number = 0;
+const BOTTLES_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (configurable)
+
+async function getAllBottles() {
+  const now = Date.now();
+  if (bottlesCache && now - bottlesCacheTime < BOTTLES_CACHE_DURATION) {
+    setAllBottles(bottlesCache);
+    return;
   }
+  const { data } = await supabase.from("bottles").select();
+  bottlesCache = (data as Bottle[]) || [];
+  bottlesCacheTime = now;
+  setAllBottles(bottlesCache);
+}
 
   async function getUserShelf(userId: string) {
     const { data } = await supabase.from("shelf_bottles").select().eq('user_id', userId);
