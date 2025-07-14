@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Box, FormControl, InputLabel, Select, MenuItem, TextField, Card, CardContent, CardActions, Typography, Button } from '@mui/material';
+import { Box, FormControl, InputLabel, Select, MenuItem, TextField, Card, CardContent, CardActions, Typography, Button, Snackbar } from '@mui/material';
 
-const VOLUME_OPTIONS = [50, 375, 700, 750];
+const VOLUME_OPTIONS = [100, 375, 700, 750];
 
 interface ShelfViewProps {
   shelfWithMeta: Array<any>;
@@ -24,6 +24,8 @@ const ShelfView: React.FC<ShelfViewProps> = ({ shelfWithMeta, categories, brands
   const [editVolumeOption, setEditVolumeOption] = useState<number | string>(750);
   const [editCost, setEditCost] = useState<string>('');
   const [editQuantity, setEditQuantity] = useState<number>(1);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
   const filteredShelf = shelfWithMeta.filter(item => {
     if (filter.category === 'Custom') {
@@ -59,6 +61,11 @@ const ShelfView: React.FC<ShelfViewProps> = ({ shelfWithMeta, categories, brands
       cost: editCost,
       quantity: editQuantity,
     });
+    // Find bottle name for toast
+    const item = shelfWithMeta.find(b => b.id === id);
+    const name = item?.custom ? item.custom.name : (item?.meta?.name || 'bottle');
+    setToastMsg(`Saved changes to ${name}`);
+    setToastOpen(true);
     setEditId(null);
   }
 
@@ -68,6 +75,13 @@ const ShelfView: React.FC<ShelfViewProps> = ({ shelfWithMeta, categories, brands
 
   return (
     <>
+      <Snackbar
+        open={toastOpen}
+        autoHideDuration={1500}
+        onClose={() => setToastOpen(false)}
+        message={toastMsg}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      />
       {/* Filter Bar + Search */}
       <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <FormControl size="small" sx={{ minWidth: 140 }}>

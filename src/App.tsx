@@ -80,7 +80,7 @@ function App() {
   useEffect(() => {
     if (session) {
       getAllBottles();
-      getUserShelf(session.user.id);
+      getUserShelf();
       getCustomBottles(session.user.id);
     } else {
       setAllBottles([]);
@@ -110,8 +110,10 @@ async function getAllBottles() {
   setAllBottles(bottlesCache);
 }
 
-  async function getUserShelf(userId: string) {
-    const { data } = await supabase.from("shelf_bottles").select().eq('user_id', userId);
+  async function getUserShelf() {
+    const { data } = await supabase.from("shelf_bottles")
+      .select()
+      .order('added_at', { ascending: false });
     setShelf((data as ShelfBottle[]) || []);
   }
 
@@ -143,7 +145,7 @@ async function getAllBottles() {
         quantity,
       },
     ]);
-    getUserShelf(session.user.id);
+    getUserShelf();
   }
   async function handleAddCustomBottle({ name, subcategory, abv, volume_ml, cost, quantity }: { name: string; subcategory: string; abv: number; volume_ml: number; cost: number; quantity: number }) {
     if (!session) return;
@@ -171,7 +173,7 @@ async function getAllBottles() {
         }
       ]);
       getCustomBottles(session.user.id);
-      getUserShelf(session.user.id);
+      getUserShelf();
     }
   }
   async function handleShelfEditSave(id: string, edit: { notes: string; volume: number; cost: string; quantity: number }) {
@@ -182,12 +184,12 @@ async function getAllBottles() {
       cost: edit.cost === '' ? 0 : Number(edit.cost),
       quantity: edit.quantity,
     }).eq('id', id);
-    getUserShelf(session.user.id);
+    getUserShelf();
   }
   async function handleRemoveFromShelf(id: string) {
     if (!session) return;
     await supabase.from('shelf_bottles').delete().eq('id', id);
-    getUserShelf(session.user.id);
+    getUserShelf();
   }
 
   const theme = getTheme(settings.primary_color, settings.secondary_color);

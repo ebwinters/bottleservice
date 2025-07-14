@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar } from '@mui/material';
 import type { Bottle } from '../types/bottle';
 
-const VOLUME_OPTIONS = [50, 375, 700, 750];
+const VOLUME_OPTIONS = [100, 375, 700, 750];
 
 interface AddBottleProps {
   categories: string[];
