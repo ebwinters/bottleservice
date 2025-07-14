@@ -19,14 +19,21 @@ export async function getAIResponse(question: string, bottles: BottleForAI[]): P
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
 
-    // Only send name and cost (omit cost if 0)
-    const bottlesForAI = bottles.map(({ name, category, cost }) =>
-      cost && cost !== 0 ? { name, category, cost } : { name, category }
-    );
+    const grouped: Record<string, { name: string; cost?: number }[]> = {};
+    bottles.forEach(bottle => {
+      if (!grouped[bottle.category]) grouped[bottle.category] = [];
+      grouped[bottle.category].push({ name: bottle.name, cost: bottle.cost });
+    });
+    const groupedString = Object.entries(grouped)
+      .map(([category, bottles]) => {
+        const items = bottles.map(b => `${b.name}${b.cost ? `-$${b.cost}` : ''}`).join(', ');
+        return `${category}: ${items}`;
+      })
+      .join(' | ');
 
-    console.log("Calling Supabase AI function with question:", question, "and bottles:", bottlesForAI)
+    console.log("Calling Supabase AI function with question:", question, "and bottles:", groupedString)
     const { data, error } = await supabase.functions.invoke('ai-query', {
-        body: { question, bottles: bottlesForAI, max_tokens: 1024 },
+        body: { question, bottles: groupedString, max_tokens: 1024 },
         headers: {
             Authorization: `Bearer ${token}`
         }
