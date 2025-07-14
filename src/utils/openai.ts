@@ -31,7 +31,6 @@ export async function getAIResponse(question: string, bottles: BottleForAI[]): P
       })
       .join(' | ');
 
-    console.log("Calling Supabase AI function with question:", question, "and bottles:", groupedString)
     const { data, error } = await supabase.functions.invoke('ai-query', {
         body: { question, bottles: groupedString, max_tokens: 1024 },
         headers: {
