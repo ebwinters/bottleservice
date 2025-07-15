@@ -1,2 +1,1 @@
-## Image Attribution
-- Cartoon Martini, Death by Cartoon on DeviantArt
+Bar inventory tracking application with bar-context enriched chat
