@@ -85,7 +85,6 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
                     const input = document.createElement('input');
                     input.type = 'file';
                     input.accept = 'image/*';
-                    input.capture = 'environment';
                     input.onchange = async (e: any) => {
                       const file = e.target.files && e.target.files[0];
                       if (file) {
