@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar, Tooltip, CircularProgress, Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import type { Bottle } from '../types/bottle';
 import { createClient } from '@supabase/supabase-js';
@@ -47,6 +48,8 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [scanMatches, setScanMatches] = useState<{ detected: any; match: Bottle | null }[]>([]);
+  const [showMatchesOverlay, setShowMatchesOverlay] = useState(false);
 
   return (
     <Box sx={{
@@ -144,17 +147,17 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
                                           type: item.type,
                                         }));
                                     }
-                                    console.log('Parsed scan result:', parsed);
                                   } catch (e) {
                                     console.error('Failed to parse scan result:', e);
                                   }
-                                  const fuse = new Fuse(allBottles, { keys: ['name', 'brand'], threshold: 0.3 });
+                                  const fuse = new Fuse(allBottles, { keys: ['name', 'brand'], threshold: 0.35 });
                                   const matches = parsed.map(r => {
                                     const res = fuse.search(r.name);
                                     if (res.length === 0) return { detected: r, match: null };
                                     return { detected: r, match: res[0]?.item };
                                   });
-                                  console.log('Scan result:', matches);
+                                  setScanMatches(matches);
+                                  setShowMatchesOverlay(true);
                                 } catch (err) {
                                   console.error('Error streaming image-scan:', err);
                                 }
@@ -377,6 +380,52 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
         message={toastMsg}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       />
+      {/* Overlay for scan matches */}
+      <Modal
+        open={showMatchesOverlay}
+        onClose={() => setShowMatchesOverlay(false)}
+        aria-labelledby="scan-matches-title"
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Paper sx={{ p: 3, minWidth: 500, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto', position: 'relative' }}>
+          <IconButton
+            aria-label="close"
+            onClick={() => setShowMatchesOverlay(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <Typography id="scan-matches-title" variant="h6" sx={{ mb: 2 }}>
+            AI Scan Results
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell>Brand</TableCell>
+                  <TableCell>Subcategory</TableCell>
+                  <TableCell>ABV</TableCell>
+                  <TableCell>Volume (ml)</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {scanMatches.map((m, idx) => m.match && (
+                  <TableRow key={idx}>
+                    <TableCell>{m.match ? m.match.name : m.detected.name}</TableCell>
+                    <TableCell>{m.match ? m.match.category : ''}</TableCell>
+                    <TableCell>{m.match ? m.match.brand : ''}</TableCell>
+                    <TableCell>{m.match ? m.match.subcategory : ''}</TableCell>
+                    <TableCell>{m.match ? m.match.abv : ''}</TableCell>
+                    <TableCell>{m.match ? m.match.volume_ml : ''}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Modal>
     </Box>
   );
 };
