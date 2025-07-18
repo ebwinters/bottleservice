@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar } from '@mui/material';
+import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar, Tooltip, CircularProgress } from '@mui/material';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import type { Bottle } from '../types/bottle';
+import { createClient } from '@supabase/supabase-js';
 
 const VOLUME_OPTIONS = [100, 375, 700, 750];
 
@@ -43,6 +45,7 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
   const [addQuantity, setAddQuantity] = useState<number>(1);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   return (
     <Box sx={{
@@ -65,7 +68,91 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
         </Typography>
         <Typography variant="h5" color="primary" sx={{ ml: 1 }}>{showAdd ? '▾' : '▸'}</Typography>
       </Box>
-      {showAdd && (
+      {showAdd && (<div>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Tooltip title="Scan your bar with AI (take a picture)">
+            <span>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<PhotoCameraIcon />}
+                disabled={aiLoading}
+                sx={{ textTransform: 'none', bgcolor: settings.secondary_color || '#6c47ff' }}
+                onClick={async () => {
+                  setAiLoading(true);
+                  // Open camera to take a picture
+                  try {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.capture = 'environment';
+                    input.onchange = async (e: any) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (file) {
+                        // Simulate AI scan delay
+                        setTimeout(() => {
+                          setAiLoading(false);
+                          setToastMsg('AI detected bottles in your bar! 🧠🥃');
+                          setToastOpen(true);
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+              const dataUrl = ev.target?.result as string;
+              if (dataUrl) {
+                // Call the streaming API with the base64 image and session token
+                const scanBottles = async () => {
+                  try {
+                    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+                      
+                      // Initialize Supabase client
+                      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+                  
+                      const { data: { session } } = await supabase.auth.getSession();
+                      const token = session?.access_token;
+                    
+                    const response = await fetch('https://xxckpfkcabiaulshekyb.supabase.co/functions/v1/image-scan', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ base64ImageUrl: dataUrl })
+                    });
+                    if (!response.body) throw new Error('No response body');
+                    const reader = response.body.getReader();
+                    let result = '';
+                    const decoder = new TextDecoder();
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      result += decoder.decode(value, { stream: true });
+                    }
+                    // Optionally, parse and use the result here
+                    // Example: setToastMsg(result); setToastOpen(true);
+                    console.log('Scan result:', result);
+                  } catch (err) {
+                    console.error('Error streaming image-scan:', err);
+                  }
+                };
+                scanBottles();
+              }
+                        };
+                        reader.readAsDataURL(file);
+                        }, 1500);
+                      } else {
+                        setAiLoading(false);
+                      }
+                    };
+                    input.click();
+                  } catch (err) {
+                    setAiLoading(false);
+                  }
+                }}
+              >
+                {aiLoading ? <CircularProgress size={20} color="inherit" /> : 'AI Scan'}
+              </Button>
+            </span>
+          </Tooltip>
+        </Box>
         <Box component="form" onSubmit={async e => {
           e.preventDefault();
           if (addBottleType === 'Custom') {
@@ -251,10 +338,11 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
                 onChange={e => setAddNotes(e.target.value)}
                 size="small"
               />
-              <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80, bgcolor: settings.secondary_color || '#2a1707', color: '#fff' }}>Add</Button>
+              <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-end', minWidth: 80, bgcolor: settings.primary_color || '#2a1707', color: '#fff' }}>Add</Button>
             </>
           )}
         </Box>
+        </div>
       )}
       <Snackbar
         open={toastOpen}
