@@ -17,6 +17,7 @@
     "@mui/material": "^7.1.2",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/supabase-js": "^2.50.2",
+    "fuse.js": "^7.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0"

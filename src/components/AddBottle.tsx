@@ -3,6 +3,7 @@ import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, 
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import type { Bottle } from '../types/bottle';
 import { createClient } from '@supabase/supabase-js';
+import Fuse from 'fuse.js'
 
 const VOLUME_OPTIONS = [100, 375, 700, 750];
 
@@ -91,52 +92,77 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
                       if (file) {
                         // Simulate AI scan delay
                         setTimeout(() => {
-                          setAiLoading(false);
                           setToastMsg('AI detected bottles in your bar! 🧠🥃');
                           setToastOpen(true);
-                        const reader = new FileReader();
-                        reader.onload = function(ev) {
-              const dataUrl = ev.target?.result as string;
-              if (dataUrl) {
-                // Call the streaming API with the base64 image and session token
-                const scanBottles = async () => {
-                  try {
-                    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-                      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-                      
-                      // Initialize Supabase client
-                      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-                  
-                      const { data: { session } } = await supabase.auth.getSession();
-                      const token = session?.access_token;
-                    
-                    const response = await fetch('https://xxckpfkcabiaulshekyb.supabase.co/functions/v1/image-scan', {
-                      method: 'POST',
-                      headers: {
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({ base64ImageUrl: dataUrl })
-                    });
-                    if (!response.body) throw new Error('No response body');
-                    const reader = response.body.getReader();
-                    let result = '';
-                    const decoder = new TextDecoder();
-                    while (true) {
-                      const { done, value } = await reader.read();
-                      if (done) break;
-                      result += decoder.decode(value, { stream: true });
-                    }
-                    // Optionally, parse and use the result here
-                    // Example: setToastMsg(result); setToastOpen(true);
-                    console.log('Scan result:', result);
-                  } catch (err) {
-                    console.error('Error streaming image-scan:', err);
-                  }
-                };
-                scanBottles();
-              }
-                        };
-                        reader.readAsDataURL(file);
+                          const reader = new FileReader();
+                          reader.onload = function (ev) {
+                            const dataUrl = ev.target?.result as string;
+                            if (dataUrl) {
+                              // Call the streaming API with the base64 image and session token
+                              const scanBottles = async () => {
+                                try {
+                                  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                                  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+                                  // Initialize Supabase client
+                                  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+                                  const { data: { session } } = await supabase.auth.getSession();
+                                  const token = session?.access_token;
+
+                                  const response = await fetch('https://xxckpfkcabiaulshekyb.supabase.co/functions/v1/image-scan', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({ base64ImageUrl: dataUrl })
+                                  });
+                                  if (!response.body) throw new Error('No response body');
+                                  const reader = response.body.getReader();
+                                  let result = '';
+                                  const decoder = new TextDecoder();
+                                  while (true) {
+                                    const { done, value } = await reader.read();
+                                    if (done) break;
+                                    result += decoder.decode(value, { stream: true });
+                                  }
+                                  setAiLoading(false);
+                                  let parsed: { name: string; count: number; type: string }[] = [];
+                                  try {
+                                    const arr = JSON.parse(result);
+                                    if (Array.isArray(arr)) {
+                                      parsed = arr
+                                        .filter(
+                                          (item: any) =>
+                                            typeof item.name === 'string' &&
+                                            typeof item.count === 'number' &&
+                                            typeof item.type === 'string'
+                                        )
+                                        .map((item: any) => ({
+                                          name: item.name,
+                                          count: item.count,
+                                          type: item.type,
+                                        }));
+                                    }
+                                    console.log('Parsed scan result:', parsed);
+                                  } catch (e) {
+                                    console.error('Failed to parse scan result:', e);
+                                  }
+                                  const fuse = new Fuse(allBottles, { keys: ['name', 'brand'], threshold: 0.3 });
+                                  const matches = parsed.map(r => {
+                                    const res = fuse.search(r.name);
+                                    if (res.length === 0) return { detected: r, match: null };
+                                    return { detected: r, match: res[0]?.item };
+                                  });
+                                  console.log('Scan result:', matches);
+                                } catch (err) {
+                                  console.error('Error streaming image-scan:', err);
+                                }
+                              };
+                              scanBottles();
+                            }
+                          };
+                          reader.readAsDataURL(file);
                         }, 1500);
                       } else {
                         setAiLoading(false);
@@ -342,7 +368,7 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
             </>
           )}
         </Box>
-        </div>
+      </div>
       )}
       <Snackbar
         open={toastOpen}
