@@ -133,18 +133,24 @@ async function getAllBottles() {
   // Filtering + Search
   // --- Add/Edit/Remove state and handlers for shelf tab moved to ShelfView ---
   // --- Add/Edit/Remove state and handlers for Add Bottle tab moved to AddBottle ---
-  async function handleAddToShelf({ bottleId, notes, volume, cost, quantity }: { bottleId: string; notes: string; volume: number; cost: number; quantity: number }) {
-    if (!bottleId || !session) return;
-    await supabase.from('shelf_bottles').insert([
-      {
+  async function handleAddToShelf(input: 
+    | { bottleId: string; notes: string; volume: number; cost: number; quantity: number }
+    | Array<{ bottleId: string; notes: string; volume: number; cost: number; quantity: number }>
+  ) {
+    if (!session) return;
+    const items = Array.isArray(input) ? input : [input];
+    const inserts = items
+      .filter(item => !!item.bottleId)
+      .map(item => ({
         user_id: session.user.id,
-        bottle_id: bottleId,
-        notes,
-        current_volume_ml: volume,
-        cost,
-        quantity,
-      },
-    ]);
+        bottle_id: item.bottleId,
+        notes: item.notes,
+        current_volume_ml: item.volume,
+        cost: item.cost,
+        quantity: item.quantity,
+      }));
+    if (inserts.length === 0) return;
+    await supabase.from('shelf_bottles').insert(inserts);
     getUserShelf();
   }
   async function handleAddCustomBottle({ name, subcategory, abv, volume_ml, cost, quantity }: { name: string; subcategory: string; abv: number; volume_ml: number; cost: number; quantity: number }) {

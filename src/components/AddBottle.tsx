@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Autocomplete, Snackbar, Tooltip, CircularProgress, Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import type { Bottle } from '../types/bottle';
@@ -16,13 +17,8 @@ interface AddBottleProps {
     secondary_color: string;
   };
   session: any;
-  onAddToShelf: (bottle: {
-    bottleId: string;
-    notes: string;
-    volume: number;
-    cost: number;
-    quantity: number;
-  }) => Promise<void>;
+  onAddToShelf: (bottle: { bottleId: string; notes: string; volume: number; cost: number; quantity: number }
+    | Array<{ bottleId: string; notes: string; volume: number; cost: number; quantity: number }>) => Promise<void>;
   onAddCustomBottle: (custom: {
     name: string;
     subcategory: string;
@@ -132,6 +128,7 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
                                   setAiLoading(false);
                                   let parsed: { name: string; count: number; type: string }[] = [];
                                   try {
+                                    console.log('result', result)
                                     const arr = JSON.parse(result);
                                     if (Array.isArray(arr)) {
                                       parsed = arr
@@ -408,22 +405,55 @@ const AddBottle: React.FC<AddBottleProps> = ({ categories, allBottles, settings,
                   <TableCell>Subcategory</TableCell>
                   <TableCell>ABV</TableCell>
                   <TableCell>Volume (ml)</TableCell>
+                  <TableCell>Remove</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {scanMatches.map((m, idx) => m.match && (
                   <TableRow key={idx}>
-                    <TableCell>{m.match ? m.match.name : m.detected.name}</TableCell>
-                    <TableCell>{m.match ? m.match.category : ''}</TableCell>
-                    <TableCell>{m.match ? m.match.brand : ''}</TableCell>
-                    <TableCell>{m.match ? m.match.subcategory : ''}</TableCell>
-                    <TableCell>{m.match ? m.match.abv : ''}</TableCell>
-                    <TableCell>{m.match ? m.match.volume_ml : ''}</TableCell>
+                    <TableCell>{m.match.name}</TableCell>
+                    <TableCell>{m.match.category}</TableCell>
+                    <TableCell>{m.match.brand}</TableCell>
+                    <TableCell>{m.match.subcategory}</TableCell>
+                    <TableCell>{m.match.abv}</TableCell>
+                    <TableCell>{m.match.volume_ml}</TableCell>
+                    <TableCell>
+                      <IconButton aria-label="remove" onClick={() => {
+                        setScanMatches(matches => matches.filter((_, i) => i !== idx));
+                      }} size="small">
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={scanMatches.filter(m => m.match).length === 0}
+              onClick={async () => {
+                // Accept: add all matches to shelf
+                if (scanMatches.length === 0) {
+                  setToastMsg('No bottles to add');
+                  setToastOpen(true);
+                  return;
+                }
+                await onAddToShelf(scanMatches.map(m => m.match ? ({ bottleId: m.match.id, notes: '', volume: 750, cost: 0, quantity: 1 }) : null).filter(m => m !== null));
+                setToastMsg('Adding scanned bottles to your shelf...');
+                setToastOpen(true);
+                setShowMatchesOverlay(false);
+                setToastOpen(false);
+                setToastMsg('Added scanned bottles to your shelf');
+                setToastOpen(true);
+                setScanMatches([]);
+              }}
+            >
+              Accept
+            </Button>
+          </Box>
         </Paper>
       </Modal>
     </Box>
